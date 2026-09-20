@@ -1,0 +1,169 @@
+{
+  "checkedAt": "2026-09-20T02:54:56.066Z",
+  "httpStatus": 200,
+  "decision": {
+    "id": "decision-astra-616a126f-b964-44e4-8f7d-3e2168ceeceb",
+    "provider": "astra",
+    "time": 45,
+    "summary": "Current observations confirm a gripper fault at the front station. Schedule its repair; leave all other settings unchanged.",
+    "status": "applied",
+    "latency": 4508,
+    "commands": [
+      {
+        "id": "astra-0-2de20092-8ff5-4c67-89cb-ee39bf8fb975",
+        "type": "repair",
+        "station": "front",
+        "revision": 5,
+        "epoch": 1
+      }
+    ],
+    "tokens": 1220,
+    "revision": 5,
+    "source": {
+      "time": 0,
+      "completed": 0,
+      "dispatched": 0,
+      "throughput": 0,
+      "yield": 100,
+      "energy": 0,
+      "dockWait": 0,
+      "assemblyWait": 0,
+      "parkingWait": 0,
+      "wip": 0,
+      "stock": 80
+    },
+    "applicationTime": 45,
+    "commandResults": [
+      {
+        "commandId": "astra-0-2de20092-8ff5-4c67-89cb-ee39bf8fb975",
+        "status": "applied",
+        "message": "Applied",
+        "revision": 6
+      }
+    ]
+  },
+  "after": {
+    "time": 193.75,
+    "front": {
+      "id": "front",
+      "status": "processing",
+      "progress": 0.90625,
+      "phaseStart": 172,
+      "phaseEnd": 196,
+      "queue": [],
+      "current": {
+        "id": "module-front-5",
+        "line": "front",
+        "lot": "warm-start",
+        "created": 169,
+        "accepted": false,
+        "rework": 0,
+        "reworkHistory": []
+      },
+      "stock": 4,
+      "capacity": 3,
+      "profile": "normal",
+      "completed": 4,
+      "rejects": 0,
+      "reworked": 0,
+      "scrapped": 0,
+      "cycles": 4,
+      "busyTime": 148.75,
+      "blockedTime": 0,
+      "starvedTime": 0,
+      "downTime": 45,
+      "pausedTime": 0,
+      "temperature": 35.691043085614936,
+      "vibration": 0.21254731409478078,
+      "currentAmps": 1.5,
+      "fault": null,
+      "maintenanceUntil": 65,
+      "offset": 0,
+      "wear": 0.09
+    },
+    "decision": {
+      "id": "decision-astra-616a126f-b964-44e4-8f7d-3e2168ceeceb",
+      "provider": "astra",
+      "time": 45,
+      "summary": "Current observations confirm a gripper fault at the front station. Schedule its repair; leave all other settings unchanged.",
+      "status": "applied",
+      "latency": 4508,
+      "commands": [
+        {
+          "id": "astra-0-2de20092-8ff5-4c67-89cb-ee39bf8fb975",
+          "type": "repair",
+          "station": "front",
+          "revision": 5,
+          "epoch": 1
+        }
+      ],
+      "tokens": 1220,
+      "revision": 5,
+      "source": {
+        "time": 0,
+        "completed": 0,
+        "dispatched": 0,
+        "throughput": 0,
+        "yield": 100,
+        "energy": 0,
+        "dockWait": 0,
+        "assemblyWait": 0,
+        "parkingWait": 0,
+        "wip": 0,
+        "stock": 80
+      },
+      "applicationTime": 45,
+      "commandResults": [
+        {
+          "commandId": "astra-0-2de20092-8ff5-4c67-89cb-ee39bf8fb975",
+          "status": "applied",
+          "message": "Applied",
+          "revision": 6
+        }
+      ],
+      "aftermath": {
+        "status": "interrupted",
+        "windowSeconds": 0,
+        "baseline": {
+          "time": 45,
+          "completed": 0,
+          "dispatched": 0,
+          "throughput": 0,
+          "yield": 100,
+          "energy": 0.0031977777777777694,
+          "dockWait": 0,
+          "assemblyWait": 45,
+          "parkingWait": 0,
+          "wip": 9,
+          "stock": 126
+        },
+        "measurement": {
+          "time": 45,
+          "completed": 0,
+          "dispatched": 0,
+          "throughput": 0,
+          "yield": 100,
+          "energy": 0.0031977777777777694,
+          "dockWait": 0,
+          "assemblyWait": 45,
+          "parkingWait": 0,
+          "wip": 9,
+          "stock": 126
+        },
+        "deltas": {
+          "completed": 0,
+          "dispatched": 0,
+          "throughput": 0,
+          "yield": 0,
+          "energy": 0,
+          "dockWait": 0,
+          "assemblyWait": 0,
+          "parkingWait": 0,
+          "wip": 0,
+          "stock": 0
+        },
+        "interpretation": "observational-not-causal"
+      }
+    }
+  }
+}

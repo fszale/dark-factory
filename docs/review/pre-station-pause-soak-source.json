@@ -1,0 +1,13 @@
+{
+  "recordedAt": "2026-09-19T20:39:38.642Z",
+  "runtime": "http://localhost:3010",
+  "pid": 47089,
+  "report": "release-soak.json",
+  "note": "Authoritative server and engine hashes for the running endurance process. Later adaptive-job routes and graphics changes require separate verification; do not attribute them to this runtime.",
+  "sha256": {
+    "dist/server/index.js": "577fd526208c9cce8f087d3e3f248c40f97372882e47def2773f01b76d8e7e08",
+    "dist/server/experiment-worker.js": "09f2e1665fdc9de17601bcd0babfd2b08ff8b3ab7efc888055d3baeeb6df33dd",
+    "dist/server/replay-worker.js": "7402e393673b896a54c8d2b4092679080b7b51eab6fc4923d0c1b719de942c26",
+    "packages/simulation/src/index.ts": "65a7b4c0f9f80e8338152ee7d4b58d95edea93f7af78e594ad58357ff86d3848"
+  }
+}

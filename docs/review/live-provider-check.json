@@ -1,0 +1,65 @@
+{
+  "checkedAt": "2026-09-20T02:53:53.313Z",
+  "providers": {
+    "astra": {
+      "httpStatus": 200,
+      "latencyMs": 4703,
+      "decision": {
+        "id": "decision-astra-3c61f505-b245-4bde-929a-8eaac3d20704",
+        "provider": "astra",
+        "time": 0,
+        "summary": "Factory is stopped with all five stations idle, evenly stocked, and fault-free; one 10-vehicle order is queued. No production has occurred, so throughput and quality performance are not yet established. Leave state unchanged.",
+        "status": "advisory",
+        "latency": 4699,
+        "commands": [],
+        "tokens": 1194,
+        "revision": 0,
+        "source": {
+          "time": 0,
+          "completed": 0,
+          "dispatched": 0,
+          "throughput": 0,
+          "yield": 100,
+          "energy": 0,
+          "dockWait": 0,
+          "assemblyWait": 0,
+          "parkingWait": 0,
+          "wip": 0,
+          "stock": 80
+        },
+        "applicationTime": 0,
+        "commandResults": []
+      }
+    },
+    "jev": {
+      "httpStatus": 200,
+      "latencyMs": 519,
+      "decision": {
+        "id": "decision-jev-9202cddf-f87b-476b-a67f-d80d23142dad",
+        "provider": "jev",
+        "time": 0,
+        "summary": "Jev selected hold.",
+        "status": "advisory",
+        "latency": 515,
+        "commands": [],
+        "tokens": 1513,
+        "revision": 0,
+        "source": {
+          "time": 0,
+          "completed": 0,
+          "dispatched": 0,
+          "throughput": 0,
+          "yield": 100,
+          "energy": 0,
+          "dockWait": 0,
+          "assemblyWait": 0,
+          "parkingWait": 0,
+          "wip": 0,
+          "stock": 80
+        },
+        "applicationTime": 0,
+        "commandResults": []
+      }
+    }
+  }
+}

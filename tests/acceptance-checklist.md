@@ -1,0 +1,23 @@
+# Release acceptance checklist
+
+Status legend: `PASS` requires dated command, recording, or inspection evidence. `PARTIAL` records what was observed and what remains. `NOT RUN` means no evidence has been collected. `BLOCKED` names a prerequisite or defect.
+
+| Area | Acceptance evidence | Status |
+| --- | --- | --- |
+| Build and static bundle | On 2026-09-19, the latest source passed `npm run typecheck`, production build, and **107 tests across 12 files**. The localhost:3010 runtime includes station pause, defect instrumentation, and adaptive-experiment routes. | PASS, local scope — Vite's Babylon world-chunk warning was non-failing. |
+| Local development runtime | Isolated Chrome acceptance used `http://localhost:5173`; it created a session, streamed live state, ran controls, comparison, and replay. | PASS — [browser record](../docs/browser-controls.md). |
+| Node 22 production smoke | Node **22.23.2** smoke against the production build validated health, session creation, ten-seed experiment, and replay. | PASS — local only; not a public deployment. |
+| Docker runtime | Image `brickworks-dark-factory:local` built. Container `brickworks-acceptance` on localhost:3007 passed health, static SPA, session, and experiment checks. | PASS — local container only. |
+| Replit Reserved VM | Single-port configuration exists. Reserved VM creation and publication are planned after local acceptance and account setup. | NOT RUN — not a prerequisite for this local release. |
+| Factory journey | Browser captures cover site, receiving, storage, gold robotaxi, parking, and fault views; the isolated session also observed live dispatch/parking events. | PASS — [guided tour](../docs/guided-tour.md) and [graphics review](../docs/graphics-review.md). |
+| Module integrity | Simulation tests and browser genealogy show one line-specific module of every required type, lot identity, timestamp, and rework record for a selected vehicle. Browser review paused Battery & floor at 46.7% and resumed the same module/lot after 19.9 simulated seconds; its visible cells and final vehicle share authored geometry. | PASS |
+| Modes | Manual mode and station-specific pause/resume were browser-verified. Advisory/autonomous and adaptive-policy routes are implemented and fixture-tested, but no live provider call was possible without credentials. | PARTIAL |
+| Provider boundary | Missing keys leave simulation usable; provider keys remain server-only and absent-provider/access-code behavior is covered by tests. | PASS — real responses remain blocked by missing keys. |
+| Scenarios and faults | Simulation suite covers balanced, shortage, slow exterior, gripper, congestion, assembly outage, dispatch blockage, and empty. Browser run invoked a supply fault and repair. | PASS |
+| Replay/export | Browser verified graphical replay into a new paused session. Checkpoint import/export and full-history file-content downloads have not been manually inspected. | PARTIAL |
+| Comparison | Browser completed ten paired current-configuration seeds with configuration, baseline/candidate/difference, standard deviation, per-seed disclosure, and chart metric selection. The adaptive runner has fixture coverage only; no live model was called. | PASS, configured scope |
+| Audio | Browser verified enable control, separate mix controls, and persisted values after reload. Audible quality, positional behavior, fade, and alert differentiation were not evaluated by a listener. | PARTIAL |
+| Accessibility baseline | Production-local keyboard smoke tabbed to `Toggle dusk`, activated it with Space, and opened details with Enter. Source includes icon labels, visible focus styling, and reduced-motion CSS. | PARTIAL, bounded check — formal certification is outside this local acceptance. |
+| Asset policy | Original procedural/runtime assets and licensed Babylon `studio.env` are inventoried, attributed, and linked in the UI. | PASS |
+| Real wall-clock soak | Preserved `docs/review/release-soak.json` for localhost:3010 core session **88170** has 121 scheduled samples through 7200.024 seconds and matching `release-soak-source.json` hashes. Its finalization added a duplicate frame check 14 ms later, so the recorded artifact remains failed; [assessment](../docs/review/release-soak-assessment.md) documents the complete observed data and fixed harness regression check. `pre-station-pause-soak.json` is superseded because it predates station pause/defect instrumentation. | PARTIAL — observed two-hour data is not a clean harness PASS. |
+| Physical validation | No physical machinery, collision, force, tolerance, safety, or commissioning validation was performed. | OUT OF SCOPE |

@@ -1,0 +1,16 @@
+run = "npm run build && npm start"
+entrypoint = "apps/web/src/main.tsx"
+modules = ["nodejs-22"]
+
+[env]
+PUBLIC_MODE = "true"
+PORT = "3000"
+
+[deployment]
+build = ["sh", "-c", "npm ci && npm run build"]
+run = ["npm", "start"]
+deploymentTarget = "vm"
+
+[[ports]]
+localPort = 3000
+externalPort = 80

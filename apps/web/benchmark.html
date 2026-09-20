@@ -1,0 +1,66 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>BRICKWORKS · Rendering benchmark</title>
+    <style>
+      html,
+      body {
+        overflow: hidden;
+      }
+      body {
+        margin: 0;
+        font: 14px system-ui;
+        background: #263b46;
+      }
+      canvas {
+        display: block;
+        width: 100vw;
+        height: 100vh;
+        touch-action: none;
+      }
+      aside {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        padding: 22px;
+        color: #eff6f2;
+        background: #1d3039eb;
+        border-radius: 12px;
+        max-width: 300px;
+      }
+      h1 {
+        font-size: 20px;
+      }
+      strong {
+        font-size: 26px;
+        color: #87dec2;
+      }
+      p {
+        line-height: 1.5;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas></canvas>
+    <aside>
+      <h1>Rendering stress scene</h1>
+      <strong id="fps">Loading…</strong>
+      <p>
+        20 animated in-process vehicle assemblies + 12 parked vehicles.
+        Synthetic rendering load only; excluded from manufacturing and AI
+        measurements.
+      </p>
+      <p id="stats"></p>
+      <button id="restart">Start new measurement window</button>
+      <p id="lifetime"></p>
+      <p>
+        Allow shader compilation to settle before a steady-state measurement.
+        Keep this tab active and stop builds while measuring. The page-load
+        minimum is preserved across measurement resets.
+      </p>
+      <a style="color: #9de1cc" href="/">Return to factory</a>
+    </aside>
+    <script type="module" src="/src/benchmark.ts"></script>
+  </body>
+</html>

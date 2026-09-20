@@ -1,0 +1,73 @@
+- main:
+  - generic "Interactive 3D brick-built dark factory"
+  - generic: BRICKWORKS
+  - button "Toggle dusk lighting":
+  - button "Toggle factory roof":
+  - button "Enable factory sound":
+  - button "Capture factory view as PNG":
+  - button "Close details panel" [expanded]:
+  - generic: Throughput
+  - strong: 80.8/hr
+  - generic: Yield
+  - strong: 94.9%
+  - generic: WIP
+  - strong: "13"
+  - generic: Dispatch
+  - strong: "459"
+  - button "Start factory":
+    - text: Start factory
+  - button "Advance one simulation event":
+  - text: SPEED
+  - combobox "SPEED":
+    - option "1×" [selected]
+    - option "2×"
+    - option "5×"
+    - option "10×"
+  - combobox:
+    - option "Balanced flow" [selected]
+    - option "Supply shortage"
+    - option "Slow exterior"
+    - option "Gripper fault"
+    - option "Cart congestion"
+    - option "Assembly outage"
+    - option "Dispatch blockage"
+    - option "Empty start"
+  - button "Reset selected scenario":
+  - complementary:
+    - navigation:
+      - button "Inspector"
+      - button "Metrics"
+      - button "Controls"
+      - button "Intelligence"
+    - text: Factory intelligence
+    - paragraph: Providers only receive a narrow operational view. Commands remain schema-checked and auditable.
+    - generic: Astra configured
+    - generic: Jev configured
+    - textbox "Question for Astra": Review the lines and recommend the safest high-value action.
+    - button "Ask Astra":
+      - text: Ask Astra
+    - button "Ask Jev":
+      - text: Ask Jev
+    - generic "advisoryAstra · 343:09 Factory is stopped with no active faults. Front has the most recorded rejects (34); test its gentle profile in a bounded paired simulation to assess quality versus throughput before changing live settings. Keep the live factory unchanged." [active]:
+      - text: advisoryAstra · 343:09
+      - paragraph: Factory is stopped with no active faults. Front has the most recorded rejects (34); test its gentle profile in a bounded paired simulation to assess quality versus throughput before changing live settings. Keep the live factory unchanged.
+    - paragraph: Source revision 8 · 6,041 ms · 1584 reported tokens
+    - text: Proposed actions
+    - paragraph: No operational changes proposed.
+    - paragraph: "Source: 80.8 vehicles/hr · 94.9% yield · 18 WIP"
+    - list:
+      - listitem: "experimented: Paired deterministic simulation completed for front:gentle. Candidate profiles: front=gentle, rear=normal, battery=normal, interior=normal, exterior=normal. Ten paired seeds run for 1,800 simulated seconds each. Named baseline/candidate configurations are included in this result. No AI provider is called or imitated."
+    - paragraph: Applied at 343:09
+    - generic: Paired experiment · completed
+    - paragraph: front / gentle · 10 paired seeds
+    - text: "Paired deterministic simulation completed for front:gentle. Candidate profiles: front=gentle, rear=normal, battery=normal, interior=normal, exterior=normal. Ten paired seeds run for 1,800 simulated seconds each. Named baseline/candidate configurations are included in this result. No AI provider is called or imitated."
+    - generic: "{ \"completed\": 0, \"dispatched\": 0, \"throughput\": 0, \"yield\": 0.07573158254795942, \"energy\": 0.002376176000000535, \"materialCost\": 0, \"maintenanceCost\": 0, \"costPerVehicle\": 0.000010561172627987503, \"leadTime\": -2.1405692620387526, \"downtime\": 0, \"dockWait\": 0, \"assemblyWait\": 0, \"parkingWait\": 0, \"roadWait\": 1.2199999999999704, \"receivingConservationDelta\": 0, \"sortingTime\": 0 }"
+    - paragraph: Awaiting 120 simulated seconds of aftermath.
+    - paragraph: Recommendation only. Use Manual operations to apply a chosen change against the current state.
+  - generic: "Astra: Factory is stopped with no active faults. Front has the most recorded rejects (34); test its gentle profile in a bounded paired simulation to assess quality versus throughput before changing live settings. Keep the live factory unchanged."
+  - button "Export checkpoint":
+    - text: Export checkpoint
+  - button "Full history":
+    - text: Full history
+  - button "import":
+    - text: import

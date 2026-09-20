@@ -1,0 +1,14 @@
+{
+  "recordedAt": "2026-09-20T02:58:59.608976+00:00",
+  "serverPort": 3010,
+  "serverPid": 47478,
+  "soakExecSession": 94018,
+  "report": "release-soak-corrected.json",
+  "hashes": {
+    "dist/server/index.js": "f01df09d7dc7723bc0c9c7b413107519bacdcae1a5e15f0e9ab03f543386a051",
+    "dist/server/experiment-worker.js": "f552479deb5cce6608727198e11cd00c1c117226e15c54d972bb49037aa55204",
+    "dist/server/replay-worker.js": "20a34af8ace605da6ed0de0fe1031732e19e4d609db3bf27bf3a32c5715478b3",
+    "packages/simulation/src/index.ts": "823b656fd1ffcbbde7a4b95a286ced4d4e3a73ff288fdc3093e192791d288789",
+    "scripts/soak.mjs": "2824e72c9ae94a6df2534e8a3c69ea858660f844019fe3abd86d619752ecbc4f"
+  }
+}

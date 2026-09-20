@@ -1,0 +1,122 @@
+- main:
+  - generic "Interactive 3D brick-built dark factory"
+  - generic: BRICKWORKS
+  - button "Toggle dusk lighting":
+  - button "Toggle factory roof":
+  - button "Enable factory sound":
+  - button "Capture factory view as PNG":
+  - button "Close details panel" [expanded]:
+  - generic: Throughput
+  - strong: 74.8/hr
+  - generic: Yield
+  - strong: 96.8%
+  - generic: WIP
+  - strong: "13"
+  - generic: Dispatch
+  - strong: "5"
+  - button "Start factory":
+    - text: Start factory
+  - button "Advance one simulation event":
+  - text: SPEED
+  - combobox "SPEED":
+    - option "1×" [selected]
+    - option "2×"
+    - option "5×"
+    - option "10×"
+  - combobox:
+    - option "Balanced flow" [selected]
+    - option "Supply shortage"
+    - option "Slow exterior"
+    - option "Gripper fault"
+    - option "Cart congestion"
+    - option "Assembly outage"
+    - option "Dispatch blockage"
+    - option "Empty start"
+  - button "Reset selected scenario":
+  - complementary:
+    - navigation:
+      - button "Inspector"
+      - button "Metrics"
+      - button "Controls"
+      - button "Intelligence"
+    - text: Module genealogy
+    - text: Line
+    - generic: Front structure
+    - text: Lot
+    - generic: warm-start
+    - text: Created
+    - generic: 4:18
+    - text: Accepted
+    - generic: "yes"
+    - text: Rework
+    - generic: "1"
+    - text: Module ID
+    - generic: module-front-9
+    - generic: Inspection and rework history
+    - list:
+      - listitem: 4:45 · inspection rejected · attempt 1 · axle alignment
+      - listitem: 4:45 · rework started · attempt 2 · axle alignment
+      - listitem: 5:00 · inspection passed · attempt 2
+    - text: Follow active entity
+    - combobox "Follow active entity" [active]:
+      - option "Choose truck, cart, vehicle, or module…" [selected]
+      - option "Vehicle · taxi-6 · parked"
+      - option "Vehicle · taxi-7 · parked"
+      - option "Vehicle · taxi-8 · outbound"
+      - option "Module · module-battery-6 · Battery & floor"
+      - option "Module · module-front-6 · Front structure"
+      - option "Module · module-rear-6 · Rear structure"
+      - option "Module · module-interior-6 · Interior"
+      - option "Module · module-exterior-6 · Exterior"
+      - option "Module · module-battery-7 · Battery & floor"
+      - option "Module · module-front-7 · Front structure"
+      - option "Module · module-rear-7 · Rear structure"
+      - option "Module · module-interior-7 · Interior"
+      - option "Module · module-exterior-7 · Exterior"
+      - option "Module · module-battery-8 · Battery & floor"
+      - option "Module · module-front-8 · Front structure"
+      - option "Module · module-rear-8 · Rear structure"
+      - option "Module · module-interior-8 · Interior"
+      - option "Module · module-exterior-8 · Exterior"
+      - option "Module · module-front-9 · Front structure"
+      - option "Module · module-front-10 · Front structure"
+      - option "Module · module-front-11 · Front structure"
+      - option "Module · module-rear-9 · Rear structure"
+      - option "Module · module-rear-10 · Rear structure"
+      - option "Module · module-rear-11 · Rear structure"
+      - option "Module · module-battery-9 · Battery & floor"
+      - option "Module · module-battery-10 · Battery & floor"
+      - option "Module · module-battery-11 · Battery & floor"
+      - option "Module · module-interior-9 · Interior"
+      - option "Module · module-interior-10 · Interior"
+      - option "Module · module-interior-11 · Interior"
+      - option "Module · module-exterior-9 · Exterior"
+    - text: Recent events
+    - button "6:25 Inspected component transferred to final-assembly buffer.":
+      - time: 6:25
+      - generic: Inspected component transferred to final-assembly buffer.
+    - button "6:17 Exclusive shared road reserved for parking.":
+      - time: 6:17
+      - generic: Exclusive shared road reserved for parking.
+    - button "6:17 Finished robotaxi crossed customer exit boundary.":
+      - time: 6:17
+      - generic: Finished robotaxi crossed customer exit boundary.
+    - button "6:17 Dispatched vehicle crossed the shared-road exit boundary.":
+      - time: 6:17
+      - generic: Dispatched vehicle crossed the shared-road exit boundary.
+    - button "6:17 Inspected component transferred to final-assembly buffer.":
+      - time: 6:17
+      - generic: Inspected component transferred to final-assembly buffer.
+    - button "6:16 Vehicle passed end-of-line checks; awaiting its exclusive road reservation.":
+      - time: 6:16
+      - generic: Vehicle passed end-of-line checks; awaiting its exclusive road reservation.
+    - button "6:15 Inspected component transferred to final-assembly buffer.":
+      - time: 6:15
+      - generic: Inspected component transferred to final-assembly buffer.
+  - generic: Production paused
+  - button "Export checkpoint":
+    - text: Export checkpoint
+  - button "Full history":
+    - text: Full history
+  - button "import":
+    - text: import
