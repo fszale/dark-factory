@@ -1,0 +1,87 @@
+{
+  "origin": "http://127.0.0.1:3012",
+  "seconds": 45,
+  "agedStartSeconds": 1800,
+  "sessions": [
+    {
+      "time": 2212.5,
+      "completed": 49,
+      "dispatched": 46,
+      "events": 1203,
+      "conservationDelta": 0
+    },
+    {
+      "time": 2211.25,
+      "completed": 50,
+      "dispatched": 47,
+      "events": 1219,
+      "conservationDelta": 0
+    },
+    {
+      "time": 2210,
+      "completed": 50,
+      "dispatched": 47,
+      "events": 1209,
+      "conservationDelta": 0
+    },
+    {
+      "time": 2208.75,
+      "completed": 50,
+      "dispatched": 47,
+      "events": 1233,
+      "conservationDelta": 0
+    },
+    {
+      "time": 2207.5,
+      "completed": 50,
+      "dispatched": 47,
+      "events": 1210,
+      "conservationDelta": 0
+    }
+  ],
+  "streams": [
+    {
+      "frames": 331,
+      "maxEvents": 200,
+      "simProgress": 412.5,
+      "p95GapMs": 195.62037500000588,
+      "maxGapMs": 704.9942919999994
+    },
+    {
+      "frames": 330,
+      "maxEvents": 200,
+      "simProgress": 411.25,
+      "p95GapMs": 198.17483300000004,
+      "maxGapMs": 799.9533330000013
+    },
+    {
+      "frames": 329,
+      "maxEvents": 200,
+      "simProgress": 410,
+      "p95GapMs": 199.42779100000007,
+      "maxGapMs": 792.3277500000004
+    },
+    {
+      "frames": 327,
+      "maxEvents": 200,
+      "simProgress": 407.5,
+      "p95GapMs": 207.85058299999946,
+      "maxGapMs": 786.0330000000031
+    },
+    {
+      "frames": 327,
+      "maxEvents": 200,
+      "simProgress": 407.5,
+      "p95GapMs": 204.31366699999853,
+      "maxGapMs": 810.0384590000031
+    }
+  ],
+  "health": {
+    "uptimeSeconds": 77.053074291,
+    "heapUsedBytes": 60035536,
+    "rssBytes": 128860160,
+    "activeSessions": 5,
+    "viewers": 5,
+    "tickProcessingMs": 3.4305420000018785
+  }
+}

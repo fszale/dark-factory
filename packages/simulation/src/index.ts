@@ -315,6 +315,21 @@ export class FactorySimulation {
   snapshot(): FactorySnapshot {
     return clone(this.state);
   }
+  /** Cheap scheduler metadata; never exposes mutable engine state. */
+  status() {
+    const s = this.state;
+    return { id: s.id, epoch: s.epoch, time: s.time, running: s.running,
+      speed: s.speed, mode: s.mode, lastEventId: s.events.at(-1)?.id ?? 0 };
+  }
+  hasOperationalEventAfter(id: number) {
+    return this.state.events.some(event => event.id > id &&
+      !["ai-decision", "ai-aftermath"].includes(event.type));
+  }
+  /** Recent display events only; complete retained charts and export history are unchanged. */
+  liveSnapshot(): FactorySnapshot {
+    return clone({ ...this.state, events: this.state.events.slice(-200) });
+  }
+
   setProviders(providers: { astra: boolean; jev: boolean }) {
     this.state.providers = { ...providers };
   }

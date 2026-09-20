@@ -169,6 +169,7 @@ interface Session {
   pendingAftermath: Map<string, PendingAftermath>;
   liveAppliedDecisions: LiveAppliedDecision[];
   liveSequence: number;
+  liveMessage?: { sequence: number; payload: string };
   adaptiveJobId?: string;
 }
 
@@ -577,7 +578,7 @@ export async function buildApp(
   }
 
   function writeWatermark(session: Session, force = false) {
-    const snapshot = session.simulation.snapshot();
+    const snapshot = session.simulation.status();
     if (
       !force &&
       snapshot.epoch === session.archiveEpoch &&
@@ -1081,9 +1082,13 @@ export async function buildApp(
   }
 
   function advanceWithAftermath(session: Session, realSeconds: number) {
+    if (!session.pendingAftermath.size) {
+      session.simulation.advance(realSeconds);
+      return;
+    }
     let remaining = realSeconds;
     while (remaining > 1e-8) {
-      const before = session.simulation.snapshot();
+      const before = session.simulation.status();
       if (!before.running) break;
       const next = Math.min(
         ...[...session.pendingAftermath.values()]
@@ -1152,13 +1157,10 @@ export async function buildApp(
     for (const session of sessions.values()) {
       advanceWithAftermath(session, tickMs / 1000);
       writeWatermark(session);
-      const after = session.simulation.snapshot();
-      const eventId = after.events.at(-1)?.id ?? 0;
-      const operationalEvent = after.events.some(
-        (event) =>
-          event.id > session.lastEventId &&
-          !["ai-decision", "ai-aftermath"].includes(event.type),
-      );
+      const after = session.simulation.status();
+      const eventId = after.lastEventId;
+      const operationalEvent = after.mode === "autonomous" && after.running &&
+        session.simulation.hasOperationalEventAfter(session.lastEventId);
       if (after.mode === "autonomous" && after.running && operationalEvent) {
         scheduleAutonomous(session, "astra");
         scheduleAutonomous(session, "jev");
@@ -1241,6 +1243,7 @@ export async function buildApp(
     // including a retry or a rejected id collision.
     cancelAdaptiveJob(session, "operator");
     session.controlVersion++;
+    session.liveMessage = undefined;
     const fingerprint = JSON.stringify(parsed.data);
     const previous = session.commands.get(parsed.data.id);
     if (previous) {
@@ -1628,6 +1631,17 @@ export async function buildApp(
     },
   );
 
+  // Serialize once per session revision of the stream, not once per viewer.
+  function liveMessage(session: Session) {
+    if (session.liveMessage?.sequence !== session.liveSequence) {
+      session.liveMessage = { sequence: session.liveSequence, payload: JSON.stringify({
+        type: "snapshot", sessionId: session.id, sequence: session.liveSequence,
+        sentAt: Date.now(), snapshot: session.simulation.liveSnapshot(),
+      }) };
+    }
+    return session.liveMessage!.payload;
+  }
+
   app.get("/api/live", { websocket: true }, (socket) => {
     let session: Session | null = null;
     let lastSequence = -1;
@@ -1644,15 +1658,7 @@ export async function buildApp(
       ) {
         session.lastAccess = Date.now();
         lastSequence = session.liveSequence;
-        socket.send(
-          JSON.stringify({
-            type: "snapshot",
-            sessionId: session.id,
-            sequence: lastSequence,
-            sentAt: Date.now(),
-            snapshot: session.simulation.snapshot(),
-          }),
-        );
+        if (socket.bufferedAmount < 512_000) socket.send(liveMessage(session));
       }
     }, tickMs);
     snapshotTimer.unref();
@@ -1671,15 +1677,7 @@ export async function buildApp(
         session.lastAccess = Date.now();
         clearTimeout(authTimer);
         lastSequence = session.liveSequence;
-        socket.send(
-          JSON.stringify({
-            type: "snapshot",
-            sessionId: session.id,
-            sequence: lastSequence,
-            sentAt: Date.now(),
-            snapshot: session.simulation.snapshot(),
-          }),
-        );
+        if (socket.bufferedAmount < 512_000) socket.send(liveMessage(session));
       } catch {
         socket.close(1008, "Invalid authentication");
       }

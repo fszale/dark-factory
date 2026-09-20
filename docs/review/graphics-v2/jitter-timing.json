@@ -1,0 +1,10 @@
+{
+  "observedAt": "2026-09-20T21:16:25.507Z",
+  "origin": "https://dark-factory-fszale.replit.app",
+  "frames": 861,
+  "packets": 78,
+  "legacyBacksteps": 58,
+  "correctedBacksteps": 0,
+  "largestLegacyBackstep": 0.12269729099999971,
+  "scope": "Both presentation clocks evaluated against the same real public WebSocket arrivals at a 16ms sampling interval; not a GPU frame-rate benchmark."
+}
