@@ -1,0 +1,15 @@
+Browser tab: 17, Title: "BRICKWORKS · Rendering benchmark", URL: "http://localhost:3010/benchmark.html".
+0 AXWebArea BRICKWORKS · Rendering benchmark, URL: localhost:3010/benchmark.html
+	1 image
+	2 container
+		3 heading Rendering stress scene, Value: 1
+			4 text Rendering stress scene
+		12 text 34.6 FPS
+		6 text 20 animated in-process vehicle assemblies + 12 parked vehicles. Synthetic rendering load only; excluded from manufacturing and AI measurements.
+		13 text Window 2 · 29 seconds · 29 samples · 6177 meshes · mean 30.7 FPS · minimum 26.9 FPS · 5th percentile 26.9 FPS · 1920 × 1080 · frame p95 41.3 ms / p99 47.2 ms (899 foreground frames)
+		8 button Start new measurement window, ID: restart
+		14 text Minimum since page load, including warm-up and other windows: 22.6 FPS.
+		10 text Allow shader compilation to settle before a steady-state measurement. Keep this tab active and stop builds while measuring. The page-load minimum is preserved across measurement resets.
+		11 link Description: Return to factory, Value: localhost:3010/
+
+The focused UI element is 8 button Start new measurement window, ID: restart

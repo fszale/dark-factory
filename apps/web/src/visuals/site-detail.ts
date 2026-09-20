@@ -48,7 +48,7 @@ export function buildSiteDetail(api: SiteDetailApi): void {
     }
   }
   // A low permanent cap provides scale when the upper facade is cut away.
-  for (let i = 0; i < 30; i++) box([-17.4 + i * 1.2, 1.82, -17.5], [1.17, .09, .70], C.steel);
+  for (let i = 0; i < 30; i++) box([-17.4 + i * 1.2, 1.82, -17.5], [1.17, .09, .70], C.steel, shell);
 
   // Roof steelwork remains on the roof toggle, so production closeups stay clear.
   const diagonalLength = Math.hypot(2.8, .64), diagonalAngle = Math.atan2(.64, 2.8);

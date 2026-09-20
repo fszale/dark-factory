@@ -1,0 +1,27 @@
+{
+  "date": "2026-09-20",
+  "target": "https://dark-factory-fszale.replit.app/",
+  "method": "Native Chrome public Intelligence panel using existing private deployment access code; no secret recorded",
+  "mode": "advisory",
+  "simulationTime": "2:44",
+  "sourceRevision": 3,
+  "astra": {
+    "status": "ADVISORY",
+    "latencyMs": 6767,
+    "reportedTokens": 1497,
+    "proposedActions": [
+      "start"
+    ],
+    "applied": false,
+    "summary": "Resume at current speed; no faults or rejects; preserve settings"
+  },
+  "jev": {
+    "status": "ADVISORY",
+    "latencyMs": 384,
+    "reportedTokens": 2020,
+    "proposedActions": [],
+    "applied": false,
+    "summary": "Jev selected hold"
+  },
+  "limits": "Bounded genuine production responses; does not establish policy improvement or long-run provider reliability"
+}

@@ -1,4 +1,4 @@
-import type { TransformNode } from '@babylonjs/core';
+import { TransformNode } from '@babylonjs/core';
 import type { VehicleVector } from './robotaxi';
 
 export interface DeliveryTruckBuildApi {
@@ -15,7 +15,8 @@ const C = {
  * Original brick-built delivery chassis. Negative Z is the cab/front.
  * Cargo belongs to the authoritative world: this builder does not add, reparent,
  * hide or reposition pallets, nor mutate root metadata or its moving transform.
- * All pieces are direct children, permitting the existing material compactor.
+ * Body pieces and six wheel pivots are direct children. Compact each wheel
+ * independently before the body to preserve rolling animation.
  */
 export function buildDeliveryTruck(api: DeliveryTruckBuildApi, parent: TransformNode): void {
   const { box, brick, cyl } = api;
@@ -56,17 +57,22 @@ export function buildDeliveryTruck(api: DeliveryTruckBuildApi, parent: Transform
     cyl([0, .65, z], .18, 2.80, C.dark, parent, [0, 0, Math.PI / 2]);
     for (const side of [-1, 1]) {
       const x = side * 1.4;
-      cyl([x, .65, z], 1.10, .35, C.rubber, parent, [0, 0, Math.PI / 2]);
+      const wheel = new TransformNode('road-wheel', parent.getScene());
+      wheel.parent = parent;
+      wheel.position.set(x, .65, z);
+      wheel.metadata = { radius: .55, axis: 'x', side };
+      const local = (p: VehicleVector): VehicleVector => [p[0] - x, p[1] - .65, p[2] - z];
+      cyl(local([x, .65, z]), 1.10, .35, C.rubber, wheel, [0, 0, Math.PI / 2]);
       for (let i = 0; i < 18; i++) {
         const a = i * Math.PI / 9;
-        box([x, .65 + Math.cos(a) * .551, z + Math.sin(a) * .551], [.34, .025, .105], C.rubber, parent, [a, 0, 0]);
+        box(local([x, .65 + Math.cos(a) * .551, z + Math.sin(a) * .551]), [.34, .025, .105], C.rubber, wheel, [a, 0, 0]);
       }
-      cyl([side * 1.59, .65, z], .76, .04, C.steel, parent, [0, 0, Math.PI / 2]);
-      cyl([side * 1.617, .65, z], .57, .025, C.navy, parent, [0, 0, Math.PI / 2]);
-      cyl([side * 1.64, .65, z], .27, .06, C.steel, parent, [0, 0, Math.PI / 2]);
+      cyl(local([side * 1.59, .65, z]), .76, .04, C.steel, wheel, [0, 0, Math.PI / 2]);
+      cyl(local([side * 1.617, .65, z]), .57, .025, C.navy, wheel, [0, 0, Math.PI / 2]);
+      cyl(local([side * 1.64, .65, z]), .27, .06, C.steel, wheel, [0, 0, Math.PI / 2]);
       for (let bolt = 0; bolt < 5; bolt++) {
         const a = bolt * Math.PI * .4;
-        cyl([side * 1.64, .65 + Math.sin(a) * .22, z + Math.cos(a) * .22], .065, .025, C.steel, parent, [0, 0, Math.PI / 2]);
+        cyl(local([side * 1.64, .65 + Math.sin(a) * .22, z + Math.cos(a) * .22]), .065, .025, C.steel, wheel, [0, 0, Math.PI / 2]);
       }
     }
   }

@@ -46,3 +46,15 @@ Validation: 111 tests across 14 files passed with a 30-second per-test allowance
 ## Production-detail pass — 2026-09-20
 
 Added vented machine cabinets, handles and control displays, low service raceways and clips, protective bollards, inspection optics and housings, and floor seams/line boundaries across the five stations. Removed decorative brick stacks beside robot cells so they do not imply untracked inventory. Simulation transfers, recipe timing and material state are unchanged. A new Production camera in the synthetic atelier supports repeatable review; `production-detail-1080p.png` is an actual browser capture at 1920×1080. All 111 tests passed with the existing 30-second test allowance. This bounded detail pass is not final reference-quality acceptance or a fresh stress benchmark.
+
+
+## Motion and atmosphere iterations — 2026-09-20
+
+Iteration one: independent axle pivots now animate robotaxi and truck tire/tread/hub geometry from actual route displacement; cart wheels also turn. Stationary/paused vehicles do not spin, and phase changes/teleports reset the displacement baseline. Body panels, fenders and cargo remain fixed. Three original white-shell/black-visor brick humanoids patrol bounded aisles, pause, scan and gesture using simulation time. They are decorative inspection actors and do not create maintenance events or claim operational inspection success.
+
+Iteration two: warm hall task fills, slab joints and marked patrol aisles, a better near-wall cutaway, and a following humanoid camera in the synthetic atelier. The pixel-density cap is 1.5 to bound high-DPI rendering cost. The first high-DPI stress measurements are preserved rather than discarded. Hero matching remains qualitative: the world now has stronger motion and industrial detail, but fine modeling density and photographic lighting still trail the reference; no invented 80-percent visual score is claimed.
+
+117 tests passed across 15 files and the production build passed. New tests cover wheel axle geometry, fixed fenders/cargo, wheel direction, pause, phase changes and compaction metadata. An existing expiry test's fragile 30-ms sleep was replaced with a bounded wait for its abort assertion after it failed under competing machine load. Actual humanoid render is `humanoid-1080p.png`. Public Astra/Jev advisory acceptance is recorded separately in `live-ai-acceptance.json`.
+
+
+Final production-renderer stress window on the same Apple M5/24 GB host: 1920×1080 foreground Codex browser, 32 vehicles, 6,177 meshes, 82 seconds/81 samples, 38.6 FPS mean, 28.7 minimum, 32.5 fifth percentile; 3,157 frame intervals with p95 33.4 ms and p99 39.2 ms. Startup minimum 12.4 FPS retained. Other desktop/browser activity was present; this is not a controlled hardware benchmark or proof of a sustained 60 FPS normal scene. The average exceeds the 30 FPS stress target, with a transient dip below it. Raw final and earlier high-DPI windows are retained alongside this report.

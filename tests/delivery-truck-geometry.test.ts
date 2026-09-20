@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { MeshBuilder, NullEngine, Scene, TransformNode, type Mesh } from '@babylonjs/core';
+import { MeshBuilder, NullEngine, Scene, TransformNode, Vector3, type Mesh } from '@babylonjs/core';
 import { buildDeliveryTruck, type DeliveryTruckBuildApi } from '../apps/web/src/visuals/delivery-truck';
 import type { VehicleVector } from '../apps/web/src/visuals/robotaxi';
 
@@ -28,11 +28,13 @@ it('keeps the detailed truck inside lane clearance and preserves the live pallet
     expect(root.position.asArray()).toEqual([12, 0, -8]);
     expect(cargo.parent).toBe(root);
     expect(cargo.position.asArray()).toEqual([.1, .2, .3]);
-    expect(root.getChildren().filter(node => node instanceof TransformNode && !meshes.includes(node as Mesh))).toEqual([cargo]);
+    const wheels = root.getChildren().filter(node => node.name === 'road-wheel') as TransformNode[];
+    expect(wheels).toHaveLength(6);
+    expect(root.getChildren().filter(node => node instanceof TransformNode && !meshes.includes(node as Mesh))).toEqual([cargo, ...wheels]);
     expect(meshes.length).toBeGreaterThan(0);
     root.position.setAll(0);
     for (const mesh of meshes) {
-      expect(mesh.parent).toBe(root);
+      expect([root, ...wheels]).toContain(mesh.parent);
       expect(Array.from(mesh.getVerticesData('position')!).every(Number.isFinite)).toBe(true);
       mesh.computeWorldMatrix(true);
       const { minimumWorld: min, maximumWorld: max } = mesh.getBoundingInfo().boundingBox;
@@ -46,6 +48,28 @@ it('keeps the detailed truck inside lane clearance and preserves the live pallet
       const overlapsLoad = min.x < 1.075 && max.x > -1.075 && min.z < 2.42 && max.z > -1.4;
       if (overlapsLoad) expect(max.y).toBeLessThan(1.025);
     }
+    const body = meshes.filter(mesh => mesh.parent === root);
+    const fixedMatrices = body.map(mesh => Array.from(mesh.computeWorldMatrix(true).asArray()));
+    for (const wheel of wheels) {
+      expect(wheel.metadata.axis).toBe('x');
+      expect(wheel.metadata.radius).toBe(.55);
+      expect(Math.abs(wheel.position.x)).toBe(1.4);
+      expect(wheel.position.y).toBe(.65);
+      expect([-2.5, 1.8, 2.7]).toContain(wheel.position.z);
+      expect(wheel.getChildren().every(node => meshes.includes(node as Mesh))).toBe(true);
+      const tread = wheel.getChildMeshes().find(mesh => mesh.name === 'part')!;
+      const before = tread.computeWorldMatrix(true).getTranslation();
+      const axle = wheel.getAbsolutePosition().clone();
+      wheel.rotation.x = Math.PI / 3;
+      const after = tread.computeWorldMatrix(true).getTranslation();
+      expect(Vector3.Distance(before, after)).toBeGreaterThan(.1);
+      expect(Vector3.Distance(before, axle)).toBeCloseTo(Vector3.Distance(after, axle), 5);
+      expect(after.x).toBeCloseTo(before.x, 5);
+    }
+    body.forEach((mesh, i) => expect(Array.from(mesh.computeWorldMatrix(true).asArray())).toEqual(fixedMatrices[i]));
+    expect(cargo.parent).toBe(root);
+    expect(cargo.position.asArray()).toEqual([.1, .2, .3]);
+    expect(root.metadata).toBe(metadata);
   } finally {
     scene.dispose(); engine.dispose();
   }

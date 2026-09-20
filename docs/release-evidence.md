@@ -17,7 +17,7 @@ Date: 2026-09-19. This is a local evidence ledger, not a deployment certificate.
 
 ## Evidence still pending or unavailable
 
-- Authenticated Astra and Jev responses on the public deployment remain pending by user direction. The configured provider flags and unauthenticated 403 checks do not establish a genuine production provider response, provider quality, cost, or long-run stability.
+- Authenticated Astra and Jev production advisory responses passed on 2026-09-20; see the sanitized evidence below. Provider quality, autonomous improvement and long-run stability remain unproven.
 - The corrected two-hour server/WebSocket soak **passed** against localhost:3010: [`release-soak-corrected.json`](review/release-soak-corrected.json) contains 121 scheduled samples through 7200.012 wall-clock seconds, 1,589 completed and 1,586 dispatched vehicles, strict frame growth from 1 to 56,809, zero material/receiving deltas and stream errors, and retained event/sample maxima of 2,000/720. [Its assessment](review/release-soak-corrected-assessment.md) records sampled heap/RSS ranges, the exact runtime identity, and five independently rechecked source hashes. It made no AI calls or credential use.
 - [`release-soak.json`](review/release-soak.json) remains preserved as the earlier failed finalization artifact, not evidence of a stopped live stream; see its [independent assessment](review/release-soak-assessment.md). The pre-station-pause partial run is also preserved separately.
 - Live checks are bounded local evidence, not a general evaluation of provider quality, long-run reliability, model stability, cost, or safety. Jev's adaptive policy chose hold twenty times and produced no improvement or regression; no applied Jev autonomous action was forced. Astra's 120-second aftermath is labeled observational, not causal.
@@ -43,3 +43,13 @@ Replit republish completed with destination status **Live** on the existing 0.5 
 The browser restored the existing paused checkpoint at 1:40 with one parked vehicle after replacement and displayed “Live session connected”. Genuine authenticated provider responses remain a separate pending check; this release did not make paid model calls. Rollback graphics source: `5dab074` (retain current private deployment secrets and VM settings).
 
 Post-release browser run advanced from 1:40 to 2:05, changed station states and throughput, and responded to Pause. The public tab was left paused at 2:05.
+
+
+## Production-cell detail published — 2026-09-20
+
+Source `62073fe`, preserved Replit history in merge `43c2971`, deployed with status Live on the same 0.5 vCPU / 2 GiB VM. Local 111 tests and production build passed. The public atelier serves the new Production camera; health is OK with both providers configured and access required. Browser recovery restored 2:05 and a connected stream; running advanced to 2:15, including a five-module joining reservation and taxi-2 entering parking. [Release observation](review/graphics-v2/production-detail-release.json) and [actual 1080p modeling review](review/graphics-v2/production-detail-1080p.png) are retained. No fresh stress/soak or paid-provider certification is claimed for this small visual pass. Rollback source: `35706e1`.
+
+
+## Genuine production AI acceptance — 2026-09-20
+
+Both public-provider advisory checks passed through the native Chrome Intelligence panel using the existing private deployment access code. Astra responded in 6,767 ms (1,497 reported tokens), proposing `start` for the paused healthy run; the UI recorded that it was not applied in advisory mode. Jev returned hold in 384 ms (2,020 reported tokens), with no operational change. [Sanitized evidence](review/graphics-v2/live-ai-acceptance.json) records scope. These are real provider responses, not configured flags or fixtures, and supersede the earlier pending authenticated-production check. They do not prove autonomous improvement or long-run reliability. Server/provider code is unchanged by the visual update.

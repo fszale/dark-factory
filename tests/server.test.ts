@@ -1278,8 +1278,7 @@ describe("server sessions", () => {
       headers: { "x-session-token": expiring.token },
       payload: { provider: "jev" },
     });
-    await new Promise((resolve) => setTimeout(resolve, 30));
-    expect(aborts).toBe(2);
+    await expect.poll(() => aborts, { timeout: 1000 }).toBe(2);
     const expired = await expiryApp.inject({
       method: "GET",
       url: `/api/sessions/${expiring.id}`,
