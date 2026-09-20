@@ -1,0 +1,50 @@
+{
+  "observedAt": "2026-09-20T22:56:34.509Z",
+  "scope": "Temporary Chrome-only profiling, restored with reload. Existing machine workloads present; final deployed comparison follows.",
+  "antiAliasing": {
+    "after": {
+      "fps": 44.94689791700414,
+      "max": 48,
+      "p95": 31.30000000004657
+    },
+    "before": {
+      "fps": 45.914484273041325,
+      "max": 42,
+      "p95": 29.5
+    },
+    "meshCount": 4810,
+    "original": 4
+  },
+  "phaseTiming": {
+    "activeMeshes": 3153,
+    "animate": {
+      "mean": 0.13692309306218073,
+      "p95": 0.3000001907348633
+    },
+    "drawCalls": 24312313,
+    "render": {
+      "mean": 19.708205147278615,
+      "p95": 23.699999809265137
+    }
+  },
+  "materialFreeze": {
+    "fps": 49.59781712759019,
+    "materials": 85,
+    "max": 42,
+    "p95": 29.400000000023283
+  },
+  "robotBatching": {
+    "afterMeshes": 4222,
+    "beforeMeshes": 4810,
+    "fps": 53.80103606239173,
+    "max": 33.40000000002328,
+    "p95": 25.099999999976717
+  },
+  "rigidSiteBatching": {
+    "afterMeshes": 2912,
+    "beforeMeshes": 4222,
+    "fps": 71.80100863321627,
+    "max": 26.69999999995343,
+    "p95": 19.099999999976717
+  }
+}

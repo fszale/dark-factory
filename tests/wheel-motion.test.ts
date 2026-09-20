@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, expect, it } from 'vitest';
-import { MeshBuilder, NullEngine, Scene, StandardMaterial, TransformNode, Vector3 } from '@babylonjs/core';
+import { MeshBuilder, NullEngine, Scene, StandardMaterial, Texture, TransformNode, Vector3 } from '@babylonjs/core';
 import { FactoryWorld } from '../apps/web/src/world';
 
 let engine: NullEngine, scene: Scene;
@@ -90,4 +90,22 @@ it('preserves axle metadata and local pivots when wheel geometry is compacted', 
   root.position.z = -.55;
   roll(root, 1, 'road', true, true);
   expect(wheel.rotation.x).toBeCloseTo(-1);
+});
+
+
+it('keeps textured labels and articulated children independent when batching rigid siblings', () => {
+ const root = new TransformNode('cell', scene), joint = new TransformNode('joint', scene);
+ joint.parent = root;
+ const label = MeshBuilder.CreatePlane('label', {}, scene);
+ label.parent = root;
+ const material = new StandardMaterial('label-material', scene);
+ material.diffuseTexture = new Texture(null, scene);
+ label.material = material;
+ const piece = MeshBuilder.CreateBox('piece', {}, scene);
+ piece.material = new StandardMaterial('plastic', scene); piece.parent = root;
+ const context = {scene, carPrefabs:new Map(), shadow:{addShadowCaster:()=>{}}};
+ (FactoryWorld.prototype as any).compactAssembly.call(context,root,'rigid-test');
+ expect(label.isDisposed()).toBe(false);expect(label.parent).toBe(root);
+ expect(joint.parent).toBe(root);expect(piece.isDisposed()).toBe(true);
+ expect(root.getChildren().length).toBe(3);
 });
