@@ -1,0 +1,87 @@
+{
+  "origin": "https://dark-factory-fszale.replit.app",
+  "seconds": 45,
+  "agedStartSeconds": 1800,
+  "sessions": [
+    {
+      "time": 2320,
+      "completed": 52,
+      "dispatched": 49,
+      "events": 1264,
+      "conservationDelta": 0
+    },
+    {
+      "time": 2338.75,
+      "completed": 53,
+      "dispatched": 50,
+      "events": 1291,
+      "conservationDelta": 0
+    },
+    {
+      "time": 2347.5,
+      "completed": 53,
+      "dispatched": 50,
+      "events": 1291,
+      "conservationDelta": 0
+    },
+    {
+      "time": 2351.25,
+      "completed": 53,
+      "dispatched": 51,
+      "events": 1303,
+      "conservationDelta": 0
+    },
+    {
+      "time": 2346.25,
+      "completed": 53,
+      "dispatched": 50,
+      "events": 1286,
+      "conservationDelta": 0
+    }
+  ],
+  "streams": [
+    {
+      "frames": 453,
+      "maxEvents": 200,
+      "simProgress": 565,
+      "p95GapMs": 299.46345799999835,
+      "maxGapMs": 974.2199170000022
+    },
+    {
+      "frames": 445,
+      "maxEvents": 200,
+      "simProgress": 555,
+      "p95GapMs": 313.515625,
+      "maxGapMs": 1020.9780840000021
+    },
+    {
+      "frames": 457,
+      "maxEvents": 200,
+      "simProgress": 570,
+      "p95GapMs": 263.41520799999853,
+      "maxGapMs": 1095.5533329999962
+    },
+    {
+      "frames": 447,
+      "maxEvents": 200,
+      "simProgress": 557.5,
+      "p95GapMs": 300.8955420000002,
+      "maxGapMs": 907.5107080000016
+    },
+    {
+      "frames": 432,
+      "maxEvents": 200,
+      "simProgress": 538.75,
+      "p95GapMs": 267.14554099999987,
+      "maxGapMs": 1028.9640409999993
+    }
+  ],
+  "health": {
+    "uptimeSeconds": 193.890627743,
+    "heapUsedBytes": 29566856,
+    "rssBytes": 127545344,
+    "activeSessions": 10,
+    "viewers": 10,
+    "tickProcessingMs": 3.9306259999866597
+  }
+}

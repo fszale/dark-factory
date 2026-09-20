@@ -36,3 +36,15 @@ export class AnimationClock {
     return this.time;
   }
 }
+
+/** Interpolate an in-flight station operation, without advancing its controller. */
+export function stationPresentationProgress(
+  station: { status: string; progress: number; phaseStart: number; phaseEnd: number },
+  time: number,
+  running: boolean,
+) {
+  if (!running || !['loading', 'processing', 'unloading'].includes(station.status))
+    return station.progress;
+  return Math.max(0, Math.min(1,
+    (time - station.phaseStart) / (station.phaseEnd - station.phaseStart || 1)));
+}

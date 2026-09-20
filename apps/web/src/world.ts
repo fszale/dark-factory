@@ -1,4 +1,4 @@
-import { AnimationClock } from "./visuals/animation-clock";
+import { AnimationClock, stationPresentationProgress } from "./visuals/animation-clock";
 import { createInspectionHumanoids, type InspectionHumanoids } from "./visuals/inspection-humanoids";
 import { buildSiteDetail } from "./visuals/site-detail";
 import { buildDeliveryTruck } from "./visuals/delivery-truck";
@@ -1136,6 +1136,7 @@ export class FactoryWorld {
       const bounds = group.getHierarchyBoundingVectors(true);
       const center = bounds.min.add(bounds.max).scale(0.5);
       group.metadata = {gripCenter: [center.x,center.y,center.z] as V};
+      this.compactAssembly(group, `staged-module:${line}:${index}`);
       group.setEnabled(index === 0);
     });
     return root;
@@ -1570,7 +1571,7 @@ export class FactoryWorld {
         effectiveStatus === "processing" &&
         activeModule
       ) {
-        const motion = this.productionMotion(robot, activeModule, st.progress);
+        const motion = this.productionMotion(robot, activeModule, stationPresentationProgress(st, t, s.running));
         if (motion) {
           this.poseProductionRobot(robot, motion.gripper);
           continue;
@@ -1647,7 +1648,7 @@ export class FactoryWorld {
           // The carrier remains at the fixture while actual component groups
           // are placed one by one. Only the finished module takes the handoff.
           position = effectiveStatus === "unloading"
-            ? lerp(fixture, handoff, ease(st.progress))
+            ? lerp(fixture, handoff, ease(stationPresentationProgress(st, t, s.running)))
             : fixture;
         } else {
           position = [
@@ -1662,7 +1663,7 @@ export class FactoryWorld {
           r,
           line,
           effectiveStatus,
-          st.progress,
+          stationPresentationProgress(st, t, s.running),
           st.current?.id === m.id,
         );
         if (st.current?.id === m.id && m.rework > 0 && !m.accepted) {
@@ -1673,7 +1674,7 @@ export class FactoryWorld {
             10.5 + (i % 2) * 1.6,
           ];
           const end: V = [0 + st.offset, 1.25, z];
-          const f = st.progress;
+          const f = stationPresentationProgress(st, t, s.running);
           r.position.set(
             ...(f < 0.3
               ? lerp(end, service, ease(f / 0.3))
