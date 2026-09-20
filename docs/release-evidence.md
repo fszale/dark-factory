@@ -34,3 +34,12 @@ The final receiving flow includes visible five-way pallet sorting and fourteen a
 ## Additional replay failure verification — 17:11 EDT
 
 The full suite passed 107 tests across 12 files and typecheck after adding an API regression test for invalid replay input, unavailable future history, unchanged source state, and released replay capacity following errors. Runtime source and built artifacts were unchanged, so the active endurance run remains valid. Quota-truncated replay rejection is covered by the existing server test. These are API-level assertions; browser presentation of these error cases and rework history remains unobserved.
+
+
+## Graphics update published — 2026-09-20
+
+Replit republish completed with destination status **Live** on the existing 0.5 vCPU / 2 GiB VM. Before publication, its clean checkout was `35706e1`, including graphics commit `f3b9392`; Replit's publication commits retain the VM port configuration. Public health returned HTTP 200 after the server restarted, both providers remained configured, and access-code enforcement remained enabled. The public atelier includes its Delivery camera and the served world bundle contains the new truck builder. See [release observation](review/graphics-v2/published-release.json).
+
+The browser restored the existing paused checkpoint at 1:40 with one parked vehicle after replacement and displayed “Live session connected”. Genuine authenticated provider responses remain a separate pending check; this release did not make paid model calls. Rollback graphics source: `5dab074` (retain current private deployment secrets and VM settings).
+
+Post-release browser run advanced from 1:40 to 2:05, changed station states and throughput, and responded to Pause. The public tab was left paused at 2:05.

@@ -1,0 +1,31 @@
+{
+  "observedAt": "2026-09-20T16:47:01.024Z",
+  "health": {
+    "ok": true,
+    "providers": {
+      "astra": {
+        "configured": true,
+        "status": "configured"
+      },
+      "jev": {
+        "configured": true,
+        "status": "configured"
+      },
+      "accessRequired": true
+    },
+    "application": {
+      "uptimeSeconds": 21.580817882,
+      "heapUsedBytes": 19585312,
+      "rssBytes": 90128384,
+      "activeSessions": 0,
+      "viewers": 0,
+      "tickProcessingMs": 0.01941399999850546
+    }
+  },
+  "deliveryReview": true,
+  "worldContainsTruck": true,
+  "sourceCommit": "f3b9392",
+  "replitCheckout": "35706e1",
+  "status": "Live",
+  "vm": "0.5 vCPU / 2 GiB RAM"
+}
