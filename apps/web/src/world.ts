@@ -1,3 +1,4 @@
+import { AnimationClock } from "./visuals/animation-clock";
 import { createInspectionHumanoids, type InspectionHumanoids } from "./visuals/inspection-humanoids";
 import { buildSiteDetail } from "./visuals/site-detail";
 import { buildDeliveryTruck } from "./visuals/delivery-truck";
@@ -109,7 +110,7 @@ export class FactoryWorld {
   private patrols: InspectionHumanoids;
   private artPreviewStarted = 0;
   private artPatrolFollow = false;
-  private lastSnapshotAt = 0;
+  private animationClock = new AnimationClock();
   private tour = false;
   private tourStart = 0;
   private following = "";
@@ -1247,7 +1248,7 @@ export class FactoryWorld {
   }
   setSnapshot(snapshot: FactorySnapshot) {
     this.snapshot = snapshot;
-    this.lastSnapshotAt = performance.now();
+    this.animationClock.receive(snapshot, performance.now());
   }
   select(id: string) {
     this.selected = id;
@@ -1535,12 +1536,7 @@ export class FactoryWorld {
       }
       return;
     }
-    const t =
-      s.time +
-      (s.running
-        ? Math.min(0.25, (performance.now() - this.lastSnapshotAt) / 1000) *
-          s.speed
-        : 0);
+    const t = this.animationClock.read(performance.now());
     this.patrols.update(t);
     const alive = new Set<string>(["preview"]);
     for (const robot of this.robots) {
