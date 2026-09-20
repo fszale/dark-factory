@@ -17,7 +17,7 @@ Read the matching skill before substantial work in its area. All paths are repos
 
 - `docs/architecture.md` and `docs/simulation.md`: implementation boundaries.
 - `docs/release-evidence.md`: verification evidence, distinct from aspirations.
-- `docs/plans/reference-graphics-upgrade.md`: requested graphics plan; remains plan-only until approved.
+- `docs/plans/reference-graphics-upgrade.md`: requested graphics plan and current implementation status; preserve its staged review gates.
 - `docs/assets/README.md`: asset provenance; concept art is not a runtime capture.
 - `docs/replit-deployment.md`: one-server deployment and recovery workflow.
 

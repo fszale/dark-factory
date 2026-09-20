@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "observedAt": "2026-09-20T16:09:15.613Z",
+  "target": "https://dark-factory-fszale.replit.app",
+  "scope": "nonpaid disposable production REST and WebSocket smoke",
+  "health": {
+    "status": 200,
+    "ok": true,
+    "providers": {
+      "astraConfigured": true,
+      "jevConfigured": true,
+      "accessRequired": true
+    }
+  },
+  "sessions": {
+    "created": 2,
+    "crossSessionTokenStatus": 401,
+    "isolation": {
+      "secondSessionTimeBefore": 0,
+      "secondSessionTimeAfter": 0,
+      "secondSessionRevisionBefore": 0,
+      "secondSessionRevisionAfter": 0,
+      "unchanged": true
+    }
+  },
+  "anonymousAi": {
+    "astraStatus": 403,
+    "jevStatus": 403,
+    "error": "AI access code required.",
+    "providerCallsReached": false
+  },
+  "websocket": {
+    "authenticated": true,
+    "framesObserved": 64,
+    "firstSequence": 14,
+    "lastSequence": 77,
+    "strictSequenceGrowth": true,
+    "sentAtPresent": true
+  },
+  "progress": {
+    "simulationTime": 92.5,
+    "runningAfterPause": false,
+    "speed": 10,
+    "receivingInspectionCount": 1,
+    "completed": 1,
+    "dispatched": 0,
+    "parkingOccupancy": 0,
+    "parkingPhaseObserved": true,
+    "conservationDelta": 0,
+    "receivingConservationDelta": 0
+  }
+}

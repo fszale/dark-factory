@@ -10,6 +10,7 @@ export default defineConfig({
       input: {
         app: "apps/web/index.html",
         benchmark: "apps/web/benchmark.html",
+        atelier: "apps/web/atelier.html",
       },
     },
     chunkSizeWarningLimit: 2500,

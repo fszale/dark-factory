@@ -1,3 +1,5 @@
+import { buildSiteDetail } from "./visuals/site-detail";
+import { buildRobotaxiModule } from "./visuals/robotaxi";
 import {
   Engine,
   Scene,
@@ -21,6 +23,7 @@ import {
   CubeTexture,
   PointerEventTypes,
   SSAO2RenderingPipeline,
+  ImageProcessingConfiguration,
 } from "@babylonjs/core";
 import {
   LINE_IDS,
@@ -33,17 +36,17 @@ const C = {
   navy: "#253c48",
   dark: "#152b36",
   steel: "#81949b",
-  floor: "#bcc9c5",
+  floor: "#aba99f",
   cream: "#e8e6d9",
   gold: "#dab04b",
   goldLight: "#ebc968",
-  glass: "#294c59",
+  glass: "#60777b",
   rubber: "#1a2327",
   white: "#f4f1e4",
   orange: "#e5994e",
   teal: "#4eb6a7",
   green: "#6f9270",
-  road: "#46575c",
+  road: "#3b4145",
   yellow: "#ecd480",
 };
 type V = [number, number, number];
@@ -98,6 +101,8 @@ export class FactoryWorld {
   private lights: Mesh[] = [];
   private roof: TransformNode;
   private shell: TransformNode;
+  private assemblyFrame: TransformNode;
+  private facade: TransformNode;
   private lastSnapshotAt = 0;
   private tour = false;
   private tourStart = 0;
@@ -122,9 +127,9 @@ export class FactoryWorld {
       stencil: true,
       antialias: true,
     });
-    this.engine.setHardwareScalingLevel(Math.max(1, devicePixelRatio / 1.5));
+    this.engine.setHardwareScalingLevel(Math.max(0.75, devicePixelRatio / 2));
     this.scene = new Scene(this.engine);
-    this.scene.clearColor = new Color4(0.76, 0.82, 0.81, 1);
+    this.scene.clearColor = new Color4(0.82, 0.82, 0.79, 1);
     this.scene.ambientColor = new Color3(0.15, 0.17, 0.16);
     this.camera = new ArcRotateCamera(
       "camera",
@@ -144,7 +149,7 @@ export class FactoryWorld {
     this.camera.minZ = 0.1;
     this.camera.maxZ = 400;
     this.hemi = new HemisphericLight("sky", new Vector3(0, 1, 0), this.scene);
-    this.hemi.intensity = 0.75;
+    this.hemi.intensity = 0.42;
     this.hemi.groundColor = c("#667476");
     this.sun = new DirectionalLight(
       "sun",
@@ -152,19 +157,19 @@ export class FactoryWorld {
       this.scene,
     );
     this.sun.position = new Vector3(30, 50, -30);
-    this.sun.intensity = 2.5;
+    this.sun.intensity = 3.1;
     this.sun.diffuse = c("#fff1d6");
     this.shadow = new ShadowGenerator(2048, this.sun);
     this.shadow.usePercentageCloserFiltering = true;
     this.shadow.filteringQuality = ShadowGenerator.QUALITY_MEDIUM;
     this.shadow.bias = 0.002;
     this.shadow.normalBias = 0.03;
-    this.shadow.setDarkness(0.25);
+    this.shadow.setDarkness(0);
     this.scene.environmentTexture = CubeTexture.CreateFromPrefilteredData(
       "/assets/studio.env",
       this.scene,
     );
-    this.scene.environmentIntensity = 0.55;
+    this.scene.environmentIntensity = 0.8;
     const ao = new SSAO2RenderingPipeline(
       "contact-occlusion",
       this.scene,
@@ -184,12 +189,16 @@ export class FactoryWorld {
     this.pipeline.bloomThreshold = 1.1;
     this.pipeline.bloomWeight = 0.14;
     this.pipeline.bloomKernel = 32;
-    this.pipeline.imageProcessing.contrast = 1.25;
-    this.pipeline.imageProcessing.exposure = 1.08;
+    this.pipeline.imageProcessing.contrast = 1.12;
+    this.pipeline.imageProcessing.exposure = 1.05;
     this.pipeline.imageProcessing.toneMappingEnabled = true;
+    this.pipeline.imageProcessing.toneMappingType = ImageProcessingConfiguration.TONEMAPPING_ACES;
     this.roof = new TransformNode("roof", this.scene);
     this.shell = new TransformNode("cutaway-frame", this.scene);
+    this.assemblyFrame = new TransformNode("assembly-frame", this.scene);
+    this.facade = new TransformNode("glazed-facade", this.scene);
     this.buildSite();
+    buildSiteDetail({scene:this.scene, shell:this.facade, roof:this.roof, box:this.box.bind(this), cyl:this.cyl.bind(this), brick:this.brick.bind(this), label:this.label.bind(this)});
     this.flushStatic();
     this.selectRing = MeshBuilder.CreateTorus(
       "selection",
@@ -215,6 +224,9 @@ export class FactoryWorld {
     this.engine.runRenderLoop(() => {
       this.animate();
       this.shell.setEnabled(this.camera.radius > 65);
+      this.assemblyFrame.setEnabled(this.camera.radius > 12);
+      for (const bay of this.facade.getChildren())
+        bay.setEnabled(this.camera.radius > 65 || (bay as TransformNode).position.z * this.camera.position.z < 0);
       this.scene.render();
       if (performance.now() - this.lastStats > 1000) {
         this.fps = this.engine.getFps();
@@ -236,7 +248,7 @@ export class FactoryWorld {
     m.albedoColor = c(hex);
     m.metallic = hex === C.gold || hex === C.goldLight ? 0.3 : 0;
     m.roughness = hex === C.rubber ? 0.9 : hex === C.glass ? 0.16 : 0.38;
-    m.environmentIntensity = 0.65;
+    m.environmentIntensity = 1.1;
     if (hex === C.gold || hex === C.goldLight) {
       m.metallic = 0.5;
       m.roughness = 0.25;
@@ -246,9 +258,19 @@ export class FactoryWorld {
       m.clearCoat.intensity = 0.3;
       m.clearCoat.roughness = 0.2;
     }
+    if (hex === C.steel) {
+      m.metallic = 0.8;
+      m.roughness = 0.28;
+    }
+    if (hex === C.floor || hex === C.road) {
+      m.roughness = 0.88;
+      m.clearCoat.isEnabled = false;
+    }
     if (hex === C.glass) {
-      m.metallic = 0.35;
-      m.alpha = 0.86;
+      m.metallic = 0.02;
+      m.alpha = 0.38;
+      m.backFaceCulling = false;
+      m.separateCullingPass = true;
     }
     if (emissive) {
       m.emissiveColor = c(hex);
@@ -469,6 +491,16 @@ export class FactoryWorld {
         this.brick([x + dx, 0.42, z + dz], [0.4, 0.7, 0.4], C.navy);
         this.box([x + dx, 0.09, z + dz], [0.65, 0.13, 0.65], C.steel);
       }
+    for (const side of [-1, 1]) {
+      this.box([x, 0.72, z + side * 0.84], [len, 0.09, 0.12], C.steel);
+      for (let t = -len / 2 + 0.6; t < len / 2; t += 2.4) {
+        this.box([x + t, 0.88, z + side * 0.9], [0.35, 0.14, 0.035], C.cream);
+        this.box([x + t, 0.88, z + side * 0.93], [0.12, 0.08, 0.025], C.rubber);
+      }
+    }
+    this.box([x - len / 2 + 0.55, 0.66, z + 1.02], [0.55, 0.42, 0.42], C.steel);
+    for (let k = 0; k < 5; k++)
+      this.box([x - len / 2 + 0.34 + k * 0.1, 0.7, z + 1.26], [0.045, 0.27, 0.04], C.navy);
   }
   private buildSite() {
     this.box([0, -0.65, 0], [91, 1.2, 55], C.navy);
@@ -716,12 +748,26 @@ export class FactoryWorld {
       this.robot(x, -3, "exterior", -1);
       this.robot(x, 3, "battery", 1);
     }
+    for (const x of [6.2, 13.8]) {
+      for (const z of [-1.2, 1.2]) {
+        this.brick([x, 0.72, z], [0.65, 1.2, 0.65], C.cream);
+        this.box([x, 1.37, z], [0.9, 0.15, 0.78], C.steel);
+        this.cyl([x, 1.59, z], 0.17, 0.35, C.steel);
+        this.box([x, 0.75, z - 0.34], [0.32, 0.34, 0.045], C.navy);
+      }
+    }
+    for (const x of [5.5, 14.5]) {
+      this.cyl([x, 1.4, -2], 0.1, 2.4, C.navy);
+      this.cyl([x, 2.6, -2], 0.24, 0.3, C.yellow);
+      this.box([x, 2.6, -2], [0.16, 0.22, 0.16], C.yellow, undefined, undefined, true);
+      this.box([x, 0.37, -2], [0.5, 0.2, 0.5], C.steel);
+    }
     for (const x of [5, 15])
       for (const z of [-4.5, 4.5])
-        this.brick([x, 3.5, z], [0.65, 6.8, 0.65], C.navy);
-    this.box([10, 7, -4.5], [11, 0.5, 0.6], C.navy);
-    this.box([10, 7, 4.5], [11, 0.5, 0.6], C.navy);
-    this.box([10, 7, 0], [0.6, 0.4, 9], C.orange);
+        this.brick([x, 3.5, z], [0.65, 6.8, 0.65], C.navy, this.assemblyFrame);
+    this.box([10, 7, -4.5], [11, 0.5, 0.6], C.navy, this.assemblyFrame);
+    this.box([10, 7, 4.5], [11, 0.5, 0.6], C.navy, this.assemblyFrame);
+    this.box([10, 7, 0], [0.6, 0.4, 9], C.orange, this.assemblyFrame);
     this.label("03  FINAL ASSEMBLY", [10, 0.35, 7], 9, 0.75, "#304852", true);
     this.label(
       "FIVE LINES. ONE VEHICLE.",
@@ -778,17 +824,19 @@ export class FactoryWorld {
   private tree(x: number, z: number) {
     this.box([x, 0.3, z], [2, 0.45, 2], C.cream);
     this.cyl([x, 1.1, z], 0.3, 1.8, "#705d49");
-    for (let y = 1.8; y < 3.8; y += 0.6) {
-      const s = 2.4 - (y - 1.8) * 0.65;
-      this.brick(
-        [x, y, z],
-        [s, 0.55, s],
-        y < 2.5 ? "#608673" : "#7b9d7f",
-        undefined,
-        false,
-      );
+    for (let level = 0; level < 3; level++) {
+      const spread = 0.75 - level * 0.18;
+      for (let k = 0; k < 5; k++) {
+        const angle = k * Math.PI * 0.4 + level * 0.5;
+        const px = x + Math.cos(angle) * spread;
+        const pz = z + Math.sin(angle) * spread;
+        const y = 2.1 + level * 0.65;
+        this.cyl([px, y, pz], 1.2 - level * 0.15, 0.5, k % 2 ? "#5a7750" : "#7a9158");
+        this.cyl([px, y + 0.28, pz], 0.65, 0.13, "#8c9d66");
+      }
     }
   }
+
   private lamp(x: number, z: number) {
     this.cyl([x, 2.2, z], 0.16, 4.3, C.navy);
     this.box([x, 4.4, z], [1.1, 0.15, 0.5], C.navy);
@@ -806,7 +854,7 @@ export class FactoryWorld {
     root.parent = this.buildParent || null;
     root.position.set(x, 0.24, z);
     root.metadata = { entity: line };
-    const color = LINE_META[line].color;
+    const color = line === "exterior" ? "#e78124" : LINE_META[line].color;
     this.brick([0, 0.4, 0], [1.5, 0.7, 1.5], C.navy, root);
     this.cyl([0, 0.85, 0], 1, 0.3, color, root);
     const upper = new TransformNode("shoulder", this.scene);
@@ -828,6 +876,27 @@ export class FactoryWorld {
       this.box([dx, -0.28, 0], [0.12, 0.55, 0.2], C.steel, wrist);
       this.box([dx * 0.65, -0.53, 0], [0.3, 0.1, 0.2], C.rubber, wrist);
     }
+    // Joint covers, fasteners and cable guides move with the existing rig.
+    for (const joint of [upper, lower]) {
+      for (const sideZ of [-0.46, 0.46]) {
+        this.cyl([0, 0, sideZ], 0.76, 0.12, C.rubber, joint, [Math.PI / 2, 0, 0]);
+        this.cyl([0, 0, sideZ * 1.13], 0.48, 0.045, C.steel, joint, [Math.PI / 2, 0, 0]);
+        for (let k = 0; k < 6; k++) {
+          const a = k * Math.PI / 3;
+          this.cyl([Math.cos(a) * 0.27, Math.sin(a) * 0.27, sideZ * 1.16], 0.07, 0.04, C.dark, joint, [Math.PI / 2, 0, 0]);
+        }
+      }
+      for (let k = 0; k < 8; k++)
+        this.box([-0.34, 0.22 + k * 0.15, 0.18], [0.14, 0.11, 0.18], C.rubber, joint);
+      this.box([0.29, 0.7, 0.26], [0.04, 0.75, 0.16], C.dark, joint);
+      this.box([0, 0.7, -0.35], [0.3, 0.38, 0.035], C.cream, joint);
+    }
+    this.cyl([0, 0.1, 0], 0.65, 0.16, color, wrist);
+    this.box([0, -0.24, 0.18], [0.22, 0.3, 0.2], C.navy, wrist);
+    this.box([0, -0.26, 0.29], [0.12, 0.1, 0.025], C.teal, wrist, undefined, true);
+    for (const dx of [-0.55, 0.55])
+      for (const dz of [-0.55, 0.55])
+        this.cyl([dx, 0.79, dz], 0.13, 0.09, C.steel, root);
     const part = new TransformNode("gripped-brick", this.scene);
     part.parent = wrist;
     this.brick([0, -0.68, 0], [0.65, 0.3, 0.45], color, part);
@@ -902,71 +971,15 @@ export class FactoryWorld {
     line: LineId,
     stages?: TransformNode[],
   ) {
-    const group = (name: string, gripCenter: V = [0, 0.75, 0]) => {
-      if (!stages) return parent;
-      const node = new TransformNode(`module-stage:${name}`, this.scene);
-      node.parent = parent;
-      node.metadata = { gripCenter };
-      stages.push(node);
-      return node;
-    };
-    if (line === "battery") {
-      this.brick([0, 0.55, 0], [3.5, 0.28, 1.8], C.dark, group("tray", [0, 0.55, 0]));
-      for (let x = -1.25; x < 1.5; x += 0.5)
-        this.brick([x, 0.76, 0], [0.45, 0.2, 1.5], C.teal, group(`cell:${x}`, [x, 0.76, 0]));
-      return;
-    }
-    if (line === "front" || line === "rear") {
-      const x = line === "front" ? -1.45 : 1.45;
-      this.brick([x, 0.68, 0], [1, 0.35, 1.8], C.gold, group("gold-body", [x, 0.68, 0]));
-      for (const z of [-1, 1]) {
-        const wheel = group(`wheel:${z}`, [x, 0.57, z]);
-        this.cyl([x, 0.57, z], 1.02, 0.35, C.rubber, wheel, [Math.PI / 2, 0, 0]);
-        this.cyl([x, 0.57, z * 1.19], 0.64, 0.055, C.gold, wheel, [Math.PI / 2, 0, 0]);
-        this.cyl([x, 0.57, z * 1.23], 0.34, 0.065, C.navy, wheel, [Math.PI / 2, 0, 0]);
-      }
-      this.box(
-        [x + (x < 0 ? -0.52 : 0.52), 0.95, 0],
-        [0.08, 0.095, 1.6],
-        x < 0 ? C.white : "#ee665b",
-        group("lightbar", [x + (x < 0 ? -0.52 : 0.52), 0.95, 0]),
-        undefined,
-        true,
-      );
-      return;
-    }
-    if (line === "interior") {
-      for (const z of [-0.45, 0.45]) {
-        const seat = group(`seat:${z}`, [0.3, 1.15, z]);
-        this.brick([0.1, 1, z], [0.65, 0.25, 0.65], C.cream, seat);
-        this.brick([0.48, 1.35, z], [0.2, 0.65, 0.65], C.cream, seat);
-      }
-      this.box([-0.65, 1.15, 0], [0.15, 0.42, 0.6], C.glass, group("console", [-0.65, 1.15, 0]), [0, 0, -0.2]);
-      return;
-    }
-    this.brick([-1.15, 1.0, 0], [1.4, 0.22, 1.86], C.goldLight, group("front-shell", [-1.15, 1.0, 0]));
-    this.brick([1.35, 1.05, 0], [0.9, 0.32, 1.9], C.gold, group("rear-shell", [1.35, 1.05, 0]));
-    const glass = group("glass-roof", [-0.25, 1.68, 0]);
-    this.box([-0.7, 1.5, 0], [1.15, 0.08, 1.6], C.glass, glass, [0, 0, -0.55]);
-    this.box([0.2, 1.86, 0], [1.55, 0.12, 1.72], C.glass, glass);
-    for (const side of [-1, 1]) {
-      const trim = group(`trim:${side}`, [0, 1.25, side * 0.9]);
-      this.box([0.2, 1.89, side * 0.87], [1.65, 0.1, 0.12], C.gold, trim);
-      this.box([-0.78, 1.5, side * 0.84], [1.2, 0.09, 0.1], C.gold, trim, [0, 0, -0.55]);
-      this.brick([0, 0.74, side * 0.96], [2.4, 0.25, 0.14], C.gold, trim, false);
-    }
-    this.box([1.0, 1.5, 0], [0.7, 0.08, 1.65], C.glass, group("rear-glass", [1.0, 1.5, 0]), [0, 0, 0.65]);
-    for (const z of [-0.94, 0.94]) {
-      const doorStage = group(`door:${z}`, [-0.05, 1.4, z]);
-      const door = new TransformNode("door", this.scene);
-      door.parent = doorStage;
-      door.position.set(-0.65, 1.05, z);
-      this.brick([0.6, 0, 0], [1.4, 0.48, 0.15], C.gold, door);
-      this.box([0.65, 0.45, 0], [1.3, 0.5, 0.065], C.glass, door);
-      this.box([0.6, 0.75, 0], [1.4, 0.09, 0.12], C.gold, door);
-      this.box([0.9, 0.05, z > 0 ? 0.09 : -0.09], [0.22, 0.055, 0.05], C.navy, door);
-    }
+    buildRobotaxiModule({
+      scene: this.scene,
+      box: this.box.bind(this),
+      brick: this.brick.bind(this),
+      cyl: this.cyl.bind(this),
+      material: this.mat.bind(this),
+    }, parent, line, stages);
   }
+
   private car(id: string, scale = 1) {
     const root = new TransformNode(id, this.scene);
     root.scaling.setAll(scale);
@@ -1077,6 +1090,39 @@ export class FactoryWorld {
   }
   parkingPosition(slot: number): V {
     return [40, 0.22, -15.4 + slot * 2.8];
+  }
+  /** Explicit art-review fixture, not a production vehicle or inventory item. */
+  addArtReviewVehicle() {
+    const vehicle = this.car("art-review-vehicle");
+    vehicle.position.set(10, 1.24, 0);
+    vehicle.rotation.y = Math.PI;
+    for (const robot of this.robots) {
+      const p = robot.root.position;
+      this.poseProductionRobot(robot, [p.x + (p.x > 10 ? -0.65 : 0.65), 2.2, p.z - robot.side * 1.65]);
+    }
+    this.camera.setTarget(new Vector3(10, 2.2, 0));
+    this.camera.radius = 8.5;
+    this.camera.alpha = 0.32;
+    this.camera.beta = 1.18;
+    this.artCamera("vehicle");
+    return vehicle;
+  }
+  artCamera(shot: string) {
+    const shots: Record<string, [V, number, number, number]> = {
+      vehicle: [[10, 2.15, 0], 7.5, 0.6, 1.25],
+      cell: [[10, 2.2, 0], 16, -2.05, 1.1],
+      site: [[0, 0.8, 0], 88, -1.28, 0.67],
+      machinery: [[7, 2, -3], 7.5, -2.2, 1.2],
+    };
+    // Vehicle detail isolates the product by hiding only the two foreground
+    // robots in this explicitly synthetic review fixture; cell view restores them.
+    for (const robot of this.robots)
+      robot.root.setEnabled(shot !== "vehicle" || robot.root.position.x < 10);
+    const [target, radius, alpha, beta] = shots[shot] || shots.vehicle;
+    this.camera.setTarget(new Vector3(...target));
+    this.camera.radius = radius;
+    this.camera.alpha = alpha;
+    this.camera.beta = beta;
   }
   addStressFleet() {
     const fleet: TransformNode[] = [];
@@ -1198,10 +1244,10 @@ export class FactoryWorld {
     this.dusk = value;
     this.scene.clearColor = value
       ? new Color4(0.08, 0.13, 0.19, 1)
-      : new Color4(0.76, 0.82, 0.81, 1);
-    this.sun.intensity = value ? 0.65 : 2.5;
-    this.hemi.intensity = value ? 0.5 : 0.75;
-    this.scene.environmentIntensity = value ? 0.35 : 0.55;
+      : new Color4(0.82, 0.82, 0.79, 1);
+    this.sun.intensity = value ? 0.65 : 3.1;
+    this.hemi.intensity = value ? 0.4 : 0.42;
+    this.scene.environmentIntensity = value ? 0.45 : 0.8;
     this.pipeline.imageProcessing.exposure = value ? 1.3 : 1.08;
   }
   /** Convert a world handoff target to the moving truck's cargo space. */

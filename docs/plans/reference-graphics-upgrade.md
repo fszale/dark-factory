@@ -1,6 +1,6 @@
 # Reference-led graphics upgrade
 
-Status: PLAN ONLY. Requested 2026-09-20. No graphics implementation authorized by this document.
+Status: IMPLEMENTATION IN PROGRESS. Requested 2026-09-20; user authorized continuation after the plan and project skills were published. Public release remains unchanged pending review.
 
 ## Target and sequencing
 
