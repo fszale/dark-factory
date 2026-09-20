@@ -1,0 +1,34 @@
+{
+  "observedAt": "2026-09-20T23:12:32.775Z",
+  "origin": "https://dark-factory-fszale.replit.app/",
+  "source": "eda35f9",
+  "replitMerge": "800dff0",
+  "worldAsset": "world-DrbUL5ZN.js",
+  "browser": "Foreground Chrome, fresh test tab; same Apple M5 host with other desktop activity",
+  "frames": {
+    "dpr": 2,
+    "height": 772,
+    "max": 38.200000000004366,
+    "meanFps": 70.46787952472174,
+    "over33": 2,
+    "over50": 0,
+    "p95": 20.69999999999709,
+    "p99": 25.099999999998545,
+    "samples": 1762,
+    "visible": "visible",
+    "width": 1512
+  },
+  "network": {
+    "packets": 240,
+    "wallSeconds": 30.031798999756575,
+    "simSeconds": 29.875,
+    "p95Gap": 0.18251900002360344,
+    "maxGap": 0.2262719999998808,
+    "speed": 1,
+    "materialBalanced": true
+  },
+  "scope": "30 second run, initial 5 seconds excluded from frame distribution. No temporary renderer modifications present. Not a sustained all-device FPS guarantee.",
+  "pauseVerifiedAt": "9:22",
+  "healthOk": true,
+  "aiAccessRequired": true
+}
