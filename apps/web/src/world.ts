@@ -215,6 +215,16 @@ export class FactoryWorld {
     this.patrols = createInspectionHumanoids({scene:this.scene, box:this.box.bind(this), cyl:this.cyl.bind(this), brick:this.brick.bind(this)});
     this.patrols.update(0);
     this.flushStatic();
+    // Merge only rigid siblings; articulated transforms and facade visibility stay independent.
+    for (const robot of this.robots) {
+      for (const role of ["root", "upper", "lower", "wrist", "part"] as const)
+        this.compactAssembly(robot[role], `robot:${robot.line}:${robot.side}:${role}`);
+    }
+    for (const group of [...this.scene.transformNodes]) {
+      if (group.name.startsWith("station-layout:") ||
+          ["cutaway-frame", "receiving-sorter"].includes(group.name))
+        this.compactAssembly(group, "rigid-site:" + group.name);
+    }
     this.selectRing = MeshBuilder.CreateTorus(
       "selection",
       { diameter: 5, thickness: 0.075, tessellation: 64 },
@@ -981,7 +991,8 @@ export class FactoryWorld {
   private compactAssembly(group: TransformNode, key: string) {
     const children = group
       .getChildren()
-      .filter((n: any) => typeof n.getVerticesData === "function") as Mesh[];
+      .filter((n: any) => typeof n.getVerticesData === "function" &&
+        !n.material?.diffuseTexture && !n.material?.albedoTexture) as Mesh[];
     let prefabs = this.carPrefabs.get(key);
     if (!prefabs) {
       prefabs = [];
