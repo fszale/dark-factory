@@ -33,3 +33,7 @@ The canonical line IDs are `front`, `rear`, `battery`, `interior`, and `exterior
 Every command is validated by the shared strict Zod schema. Commands carry optional revision and epoch values so the server can reject stale intent after reset or a concurrent change. Each successful command returns the current revision. Snapshots declare format version `1` and record the seed, scenario, configuration, decisions, events, samples, metrics, provider status, and active faults.
 
 Provider responses are converted to the same command shape. A provider cannot directly mutate a session. The server records applied, advisory, rejected, pending, and error decisions so operators can distinguish advice from actual state changes.
+
+
+### Live stream work budget
+The server scheduler reads immutable scalar status instead of cloning retained history for housekeeping. Sessions without pending AI aftermath advance directly. Each session serializes a live snapshot at most once per stream sequence and shares it among viewers; slow sockets skip superseded frames above a 512 KB outbound backlog. Live event display retains the latest 200 events, while full REST snapshots, checkpoints, chart retention and durable history exports remain unchanged.
