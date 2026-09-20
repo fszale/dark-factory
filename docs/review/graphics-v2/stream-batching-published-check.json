@@ -1,0 +1,49 @@
+{
+  "observedAt": "2026-09-20T23:04:44.081Z",
+  "source": "18c29ff",
+  "chrome": {
+    "dpr": 2,
+    "height": 772,
+    "longTasks": [
+      56,
+      51,
+      53,
+      59,
+      63,
+      52,
+      54,
+      50,
+      67,
+      76,
+      133,
+      147,
+      84,
+      73,
+      61,
+      77,
+      62,
+      61,
+      61,
+      51,
+      53
+    ],
+    "max": 148,
+    "meanFps": 59.515238780897505,
+    "over33": 63,
+    "over50": 24,
+    "p95": 33.29999999998836,
+    "p99": 58.5,
+    "samples": 1488,
+    "visible": "visible",
+    "width": 1512
+  },
+  "network": {
+    "packets": 239,
+    "wallSeconds": 29.936013999395072,
+    "simSeconds": 29.75,
+    "p95Gap": 0.20254999957978725,
+    "maxGap": 0.3765930002555251,
+    "speed": 1
+  },
+  "note": "Published server and rigid batching check before final station-progress interpolation. Long tasks retained, not excluded."
+}
