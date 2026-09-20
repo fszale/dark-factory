@@ -82,22 +82,32 @@ export function buildRobotaxiModule(api: RobotaxiBuildApi, parent: TransformNode
     box([end, .76, 0], [.16, .27, 1.98], P.gold, frame);
     box([end + (front ? -.09 : .09), .61, 0], [.018, .17, .92], P.dark, frame);
     for (const side of [-1, 1]) {
-      const wheel = stage(`wheel:${side}`, [x, .57, side]);
-      cyl([x, .57, side], 1.02, .33, P.rubber, wheel, [Math.PI / 2, 0, 0]);
+      const wheel = stages
+        ? stage(`wheel:${side}`, [x, .57, side])
+        : new TransformNode('road-wheel', api.scene);
+      if (!stages) {
+        wheel.parent = parent;
+        wheel.position.set(x, .57, side);
+        wheel.metadata = { radius: .51, axis: 'z', side };
+      }
+      // Manufacturing stages retain authored coordinates/grip centres. Finished
+      // wheels use a local axle pivot, leaving their fenders on the module body.
+      const local = (p: VehicleVector): VehicleVector => stages ? p : [p[0] - x, p[1] - .57, p[2] - side];
+      cyl(local([x, .57, side]), 1.02, .33, P.rubber, wheel, [Math.PI / 2, 0, 0]);
       // Narrow raised tread blocks leave actual grooves; hub layers remain readable at close range.
       for (let i = 0; i < 24; i++) {
         const angle = i * Math.PI / 12;
-        box([x + Math.sin(angle) * .507, .57 + Math.cos(angle) * .507, side], [.087, .032, .32], P.rubber, wheel, [0, 0, -angle]);
+        box(local([x + Math.sin(angle) * .507, .57 + Math.cos(angle) * .507, side]), [.087, .032, .32], P.rubber, wheel, [0, 0, -angle]);
       }
-      cyl([x, .57, side * 1.179], .79, .025, P.dark, wheel, [Math.PI / 2, 0, 0]);
-      cyl([x, .57, side * 1.196], .70, .025, P.gold, wheel, [Math.PI / 2, 0, 0]);
-      cyl([x, .57, side * 1.214], .61, .023, P.dark, wheel, [Math.PI / 2, 0, 0]);
+      cyl(local([x, .57, side * 1.179]), .79, .025, P.dark, wheel, [Math.PI / 2, 0, 0]);
+      cyl(local([x, .57, side * 1.196]), .70, .025, P.gold, wheel, [Math.PI / 2, 0, 0]);
+      cyl(local([x, .57, side * 1.214]), .61, .023, P.dark, wheel, [Math.PI / 2, 0, 0]);
       for (let spoke = 0; spoke < 6; spoke++) {
         const a = spoke * Math.PI / 3;
-        box([x + Math.sin(a) * .2, .57 + Math.cos(a) * .2, side * 1.231], [.055, .23, .02], P.steel, wheel, [0, 0, -a]);
+        box(local([x + Math.sin(a) * .2, .57 + Math.cos(a) * .2, side * 1.231]), [.055, .23, .02], P.steel, wheel, [0, 0, -a]);
       }
-      cyl([x, .57, side * 1.252], .24, .06, P.gold, wheel, [Math.PI / 2, 0, 0]);
-      cyl([x, .57, side * 1.29], .13, .02, P.dark, wheel, [Math.PI / 2, 0, 0]);
+      cyl(local([x, .57, side * 1.252]), .24, .06, P.gold, wheel, [Math.PI / 2, 0, 0]);
+      cyl(local([x, .57, side * 1.29]), .13, .02, P.dark, wheel, [Math.PI / 2, 0, 0]);
       const arch = stage(`wheel-arch:${side}`, [x, 1.15, side]);
       for (let i = 0; i < 9; i++) {
         const a = -.16 + i * (Math.PI + .32) / 8;

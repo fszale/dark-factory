@@ -1,3 +1,4 @@
+import { createInspectionHumanoids, type InspectionHumanoids } from "./visuals/inspection-humanoids";
 import { buildSiteDetail } from "./visuals/site-detail";
 import { buildDeliveryTruck } from "./visuals/delivery-truck";
 import { buildRobotaxiModule } from "./visuals/robotaxi";
@@ -14,6 +15,7 @@ import {
   StandardMaterial,
   HemisphericLight,
   DirectionalLight,
+  SpotLight,
   ShadowGenerator,
   ArcRotateCamera,
   DefaultRenderingPipeline,
@@ -104,6 +106,9 @@ export class FactoryWorld {
   private shell: TransformNode;
   private assemblyFrame: TransformNode;
   private facade: TransformNode;
+  private patrols: InspectionHumanoids;
+  private artPreviewStarted = 0;
+  private artPatrolFollow = false;
   private lastSnapshotAt = 0;
   private tour = false;
   private tourStart = 0;
@@ -128,7 +133,7 @@ export class FactoryWorld {
       stencil: true,
       antialias: true,
     });
-    this.engine.setHardwareScalingLevel(Math.max(0.75, devicePixelRatio / 2));
+    this.engine.setHardwareScalingLevel(Math.max(1, devicePixelRatio / 1.5));
     this.scene = new Scene(this.engine);
     this.scene.clearColor = new Color4(0.82, 0.82, 0.79, 1);
     this.scene.ambientColor = new Color3(0.15, 0.17, 0.16);
@@ -158,8 +163,14 @@ export class FactoryWorld {
       this.scene,
     );
     this.sun.position = new Vector3(30, 50, -30);
-    this.sun.intensity = 3.1;
+    this.sun.intensity = 2.6;
     this.sun.diffuse = c("#fff1d6");
+    for (const [x, z] of [[-7, -4], [10, 1]]) {
+      const fill = new SpotLight("hall-task-fill", new Vector3(x, 9, z), new Vector3(0, -1, 0), 2.1, 1, this.scene);
+      fill.diffuse = c("#ffe3b2");
+      fill.intensity = 35;
+      fill.range = 22;
+    }
     this.shadow = new ShadowGenerator(2048, this.sun);
     this.shadow.usePercentageCloserFiltering = true;
     this.shadow.filteringQuality = ShadowGenerator.QUALITY_MEDIUM;
@@ -200,6 +211,8 @@ export class FactoryWorld {
     this.facade = new TransformNode("glazed-facade", this.scene);
     this.buildSite();
     buildSiteDetail({scene:this.scene, shell:this.facade, roof:this.roof, box:this.box.bind(this), cyl:this.cyl.bind(this), brick:this.brick.bind(this), label:this.label.bind(this)});
+    this.patrols = createInspectionHumanoids({scene:this.scene, box:this.box.bind(this), cyl:this.cyl.bind(this), brick:this.brick.bind(this)});
+    this.patrols.update(0);
     this.flushStatic();
     this.selectRing = MeshBuilder.CreateTorus(
       "selection",
@@ -211,6 +224,7 @@ export class FactoryWorld {
     this.selectRing.setEnabled(false);
     this.scene.onPointerObservable.add((info) => {
       if (info.type === PointerEventTypes.POINTERDOWN) {
+        this.artPatrolFollow = false;
         this.tour = false;
         this.following = "";
         this.targetCamera = null;
@@ -237,6 +251,7 @@ export class FactoryWorld {
     });
   }
   private stopAuto = () => {
+    this.artPatrolFollow = false;
     this.tour = false;
     this.following = "";
     this.targetCamera = null;
@@ -507,6 +522,19 @@ export class FactoryWorld {
     this.box([0, -0.65, 0], [91, 1.2, 55], C.navy);
     this.box([0, -0.01, 0], [90, 0.15, 54], C.floor);
     this.box([-2, 0.12, 0], [43, 0.15, 35], C.cream);
+    // Inlaid slab joints provide scale without creating visual inventory.
+    for (let x = -22; x <= 18; x += 2)
+      this.box([x, 0.201, 0], [0.018, 0.006, 34.8], "#b9beb8");
+    for (let z = -16; z <= 16; z += 2)
+      this.box([-2, 0.202, z], [42.8, 0.006, 0.018], "#b9beb8");
+    for (const z of [-15.7, 15.7]) {
+      this.box([-6, 0.211, z], [20, 0.015, 0.06], C.yellow);
+      for (const x of [-15, -8, -1]) {
+        this.box([x, 0.216, z + 0.35], [0.7, 0.018, 0.08], C.white);
+        this.box([x + 0.26, 0.216, z + 0.47], [0.35, 0.018, 0.08], C.white, undefined, [0, -0.7, 0]);
+      }
+    }
+
     this.label(
       "BRICKWORKS   /   AUTONOMOUS SYSTEMS",
       [-3, 0.24, -16.1],
@@ -663,7 +691,7 @@ export class FactoryWorld {
       this.box([0, 6.2, z], [38, 0.5, 0.7], C.navy, this.shell);
     for (let x = -18; x < 18; x += 1.2) {
       this.brick([x, 0.56, -17.5], [1.18, 0.8, 0.6], C.cream, this.shell);
-      this.brick([x, 1.37, -17.5], [1.18, 0.8, 0.6], C.cream);
+      this.brick([x, 1.37, -17.5], [1.18, 0.8, 0.6], C.cream, this.shell);
     }
     this.box([0, 6.65, 0], [38, 0.2, 35], C.cream, this.roof);
     this.roof.setEnabled(false);
@@ -1062,7 +1090,15 @@ export class FactoryWorld {
       carrier.setEnabled(false);
       return carrier;
     });
+    const wheels: TransformNode[] = [];
     modules.forEach((module, i) => {
+      for (const child of module.getChildren()) {
+        if (child.name === "road-wheel") {
+          const wheel = child as TransformNode;
+          this.compactAssembly(wheel, "road-wheel:" + wheel.metadata.side);
+          wheels.push(wheel);
+        }
+      }
       for (const child of module.getChildren())
         if (child.name === "door")
           this.compactAssembly(
@@ -1075,7 +1111,7 @@ export class FactoryWorld {
     carriers.forEach((carrier, i) =>
       this.compactAssembly(carrier, "carrier:" + i),
     );
-    root.metadata = { entity: id, modules, carriers };
+    root.metadata = { entity: id, modules, carriers, wheels };
     return root;
   }
   private module(id: string, line: LineId) {
@@ -1096,6 +1132,9 @@ export class FactoryWorld {
     const r = new TransformNode(id, this.scene);
     r.metadata = { entity: id };
     buildDeliveryTruck({ box: this.box.bind(this), brick: this.brick.bind(this), cyl: this.cyl.bind(this) }, r);
+    const wheels = r.getChildren().filter(n => n.name === "road-wheel") as TransformNode[];
+    for (const wheel of wheels) this.compactAssembly(wheel, "truck-wheel:" + wheel.metadata.side);
+    r.metadata.wheels = wheels;
     this.compactAssembly(r, "delivery-truck:body");
     const cargo = new TransformNode("cargo", this.scene);
     cargo.parent = r;
@@ -1120,9 +1159,18 @@ export class FactoryWorld {
     r.metadata = { entity: id };
     this.brick([0, 0.4, 0], [1.8, 0.55, 2], C.navy, r);
     this.box([0, 0.74, 0], [1.9, 0.12, 2.1], C.teal, r);
+    const wheels: TransformNode[] = [];
     for (const x of [-0.9, 0.9])
-      for (const z of [-0.65, 0.65])
-        this.cyl([x, 0.25, z], 0.4, 0.2, C.rubber, r, [0, 0, Math.PI / 2]);
+      for (const z of [-0.65, 0.65]) {
+        const wheel = new TransformNode("cart-wheel", this.scene);
+        wheel.parent = r;
+        wheel.position.set(x, 0.25, z);
+        wheel.metadata = {radius: 0.2};
+        this.cyl([0, 0, 0], 0.4, 0.2, C.rubber, wheel, [0, 0, Math.PI / 2]);
+        this.box([Math.sign(x) * 0.11, 0, 0], [0.018, 0.24, 0.045], C.steel, wheel);
+        wheels.push(wheel);
+      }
+    r.metadata.wheels = wheels;
     const cargo = new TransformNode("cargo", this.scene);
     cargo.parent = r;
     this.brick([0, 1.05, 0], [1.4, 0.5, 1.6], LINE_META[line].color, cargo);
@@ -1135,6 +1183,7 @@ export class FactoryWorld {
   }
   /** Explicit art-review fixture, not a production vehicle or inventory item. */
   addArtReviewVehicle() {
+    this.artPreviewStarted = performance.now();
     const reviewTruck = this.truck("art-review-truck");
     reviewTruck.position.set(-29, 0.2, 0);
     const vehicle = this.car("art-review-vehicle");
@@ -1152,6 +1201,7 @@ export class FactoryWorld {
     return vehicle;
   }
   artCamera(shot: string) {
+    this.artPatrolFollow = shot === "patrol";
     const shots: Record<string, [V, number, number, number]> = {
       vehicle: [[10, 2.15, 0], 7.5, 0.6, 1.25],
       cell: [[10, 2.2, 0], 16, -2.05, 1.1],
@@ -1159,6 +1209,7 @@ export class FactoryWorld {
       machinery: [[7, 2, -3], 7.5, -2.2, 1.2],
       delivery: [[-29, 1.6, 0], 13, -2.4, 1.15],
       production: [[-7, 1.3, -12], 14, -1.1, 0.95],
+      patrol: [[-10, 1.5, -16], 9, -1.1, 0.95],
     };
     // Vehicle detail isolates the product by hiding only the two foreground
     // robots in this explicitly synthetic review fixture; cell view restores them.
@@ -1291,7 +1342,7 @@ export class FactoryWorld {
     this.scene.clearColor = value
       ? new Color4(0.08, 0.13, 0.19, 1)
       : new Color4(0.82, 0.82, 0.79, 1);
-    this.sun.intensity = value ? 0.65 : 3.1;
+    this.sun.intensity = value ? 0.65 : 2.6;
     this.hemi.intensity = value ? 0.4 : 0.42;
     this.scene.environmentIntensity = value ? 0.45 : 0.8;
     this.pipeline.imageProcessing.exposure = value ? 1.3 : 1.08;
@@ -1434,6 +1485,22 @@ export class FactoryWorld {
       }
     });
   }
+  private rollWheels(root: TransformNode, time: number, phase: string, moving: boolean, truck = false) {
+    const previous = root.metadata.wheelMotion;
+    if (moving && previous && time > previous.time && phase === previous.phase) {
+      const dx = root.position.x - previous.x, dz = root.position.z - previous.z;
+      const distance = Math.hypot(dx, dz);
+      if (distance < 8) {
+        const yaw = root.rotation.y;
+        const forward = truck ? -dx * Math.sin(yaw) - dz * Math.cos(yaw) : -dx * Math.cos(yaw) + dz * Math.sin(yaw);
+        for (const wheel of (root.metadata.wheels || []) as TransformNode[]) {
+          const axis = truck ? "x" : "z";
+          wheel.rotation[axis] = (wheel.rotation[axis] + (truck ? -1 : 1) * Math.sign(forward) * distance / (wheel.metadata?.radius ?? (truck ? 0.55 : 0.51))) % (Math.PI * 2);
+        }
+      }
+    }
+    root.metadata.wheelMotion = {time, phase, x:root.position.x, z:root.position.z};
+  }
   private steerYaw(root: TransformNode, target: number) {
     root.rotation.y += angleStep(root.rotation.y, target) * 0.18;
   }
@@ -1458,13 +1525,23 @@ export class FactoryWorld {
   }
   private animate() {
     const s = this.snapshot;
-    if (!s) return;
+    if (!s) {
+      if (this.artPreviewStarted) {
+        this.patrols.update((performance.now() - this.artPreviewStarted) / 1000);
+        if (this.artPatrolFollow) {
+          const inspector = this.scene.getTransformNodeByName("inspection-humanoid:north:root");
+          if (inspector) this.camera.target.copyFrom(inspector.position.add(new Vector3(0, 1.5, 0)));
+        }
+      }
+      return;
+    }
     const t =
       s.time +
       (s.running
         ? Math.min(0.25, (performance.now() - this.lastSnapshotAt) / 1000) *
           s.speed
         : 0);
+    this.patrols.update(t);
     const alive = new Set<string>(["preview"]);
     for (const robot of this.robots) {
       const st = s.stations[robot.line];
@@ -1652,6 +1729,7 @@ export class FactoryWorld {
       r.position.set(...p);
       // The cab faces local -Z, while travel yaw describes the world tangent.
       this.steerYaw(r, -moving.yaw - Math.PI / 2);
+      this.rollWheels(r, t, truck.phase, truck.phase === "approach" || truck.phase === "departing", true);
       const cargo = r.metadata.cargo as TransformNode;
       cargo.setEnabled(
         truck.phase !== "departing" || truck.inspection === "rejected",
@@ -1700,6 +1778,7 @@ export class FactoryWorld {
               : b),
       );
       r.rotation.y = Math.PI / 2;
+      this.rollWheels(r, t, cart.phase, cart.phase === "outbound" || cart.phase === "returning", true);
       const cargo = r.metadata.cargo as TransformNode;
       cargo.setEnabled(cart.phase !== "returning");
       // The one rendered kit begins at its matching rack, rides on the cart,
@@ -1761,6 +1840,7 @@ export class FactoryWorld {
       }
       r.position.set(...p);
       r.rotation.y = yaw;
+      this.rollWheels(r, t, v.phase, ["outbound", "parking", "dispatching"].includes(v.phase));
       const mods = r.metadata.modules as TransformNode[];
       mods.forEach((n, i) => {
         n.setEnabled(true);

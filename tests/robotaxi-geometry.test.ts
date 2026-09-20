@@ -85,6 +85,43 @@ describe('shared manufactured robotaxi geometry', () => {
     }
   });
 
+
+  it('spins finished wheels around their local axles without moving fenders or changing manufacturing stages', () => {
+    for (const line of ['front', 'rear'] as const) {
+      const module = new TransformNode(line, scene);
+      buildRobotaxiModule(api, module, line);
+      const wheels = module.getChildren().filter(node => node.name === 'road-wheel') as TransformNode[];
+      expect(wheels).toHaveLength(2);
+      const fixedMeshes = module.getChildren().filter(node => node instanceof Mesh) as Mesh[];
+      expect(fixedMeshes.length).toBeGreaterThan(0);
+      const fixedPositions = fixedMeshes.map(mesh => mesh.computeWorldMatrix(true).asArray().slice());
+      for (const wheel of wheels) {
+        expect(wheel.position.asArray()).toEqual([line === 'front' ? -1.45 : 1.45, .57, wheel.metadata.side]);
+        expect(wheel.metadata.axis).toBe('z');
+        expect(wheel.metadata.radius).toBeGreaterThan(.4);
+        const tread = wheel.getChildMeshes().find(mesh => mesh.name === 'box')!;
+        const before = tread.computeWorldMatrix(true).getTranslation();
+        const axle = wheel.getAbsolutePosition().clone();
+        wheel.rotation.z = Math.PI / 3;
+        const after = tread.computeWorldMatrix(true).getTranslation();
+        expect(Vector3.Distance(before, after)).toBeGreaterThan(.1);
+        expect(Vector3.Distance(before, axle)).toBeCloseTo(Vector3.Distance(after, axle), 5);
+        expect(after.z).toBeCloseTo(before.z, 5);
+      }
+      fixedMeshes.forEach((mesh, i) => expect(Array.from(mesh.computeWorldMatrix(true).asArray())).toEqual(Array.from(fixedPositions[i])));
+      const staged = new TransformNode(`staged:${line}`, scene), stages: TransformNode[] = [];
+      buildRobotaxiModule(api, staged, line, stages);
+      expect(staged.getDescendants().filter(node => node.name === 'road-wheel')).toHaveLength(0);
+      const wheelStages = stages.filter(stage => stage.name.startsWith('module-stage:wheel:'));
+      expect(wheelStages).toHaveLength(2);
+      for (const stage of wheelStages) {
+        expect(stage.position.asArray()).toEqual([0, 0, 0]);
+        expect(stage.metadata.gripCenter[0]).toBe(line === 'front' ? -1.45 : 1.45);
+        expect(stage.getChildren().every(node => node instanceof Mesh)).toBe(true);
+      }
+    }
+  });
+
   it('preserves shared staged geometry, grip metadata and direct children for compaction', () => {
     for (const line of LINE_IDS) {
       const assembled = new TransformNode(`assembled:${line}`, scene);
@@ -105,7 +142,7 @@ describe('shared manufactured robotaxi geometry', () => {
         for (const child of root.getChildren()) {
           if (child instanceof Mesh) continue;
           expect(child).toBeInstanceOf(TransformNode);
-          expect(child.name).toBe('door');
+          expect(['door', 'road-wheel']).toContain(child.name);
           expect(child.getChildren().every(node => node instanceof Mesh)).toBe(true);
         }
       }
