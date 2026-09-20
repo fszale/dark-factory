@@ -705,17 +705,41 @@ export class FactoryWorld {
       ] as [number, number][]) {
         this.robot(x, z + side * 1.85, line, side);
         this.box([x, 1, z + side * 3.0], [2.5, 0.8, 0.75], C.navy);
-        for (let k = 0; k < 5; k++)
-          this.brick(
-            [x - 0.8 + k * 0.4, 1.6, z + side * 3.0],
-            [0.38, 0.48, 0.55],
-            m.color,
-          );
+        // Fixed machine controls, not decorative material stock.
+        this.box([x, 1.5, z + side * 3], [2.5, 0.12, 0.82], C.steel);
+        for (const dx of [-0.78, 0, 0.78]) {
+          this.box([x + dx, 1.02, z + side * 3.4], [0.69, 0.64, 0.045], C.cream);
+          this.box([x + dx + 0.22, 1.06, z + side * 3.44], [0.035, 0.19, 0.045], C.steel);
+          for (let vent = 0; vent < 3; vent++)
+            this.box([x + dx, 0.85 + vent * 0.06, z + side * 3.43], [0.38, 0.018, 0.025], C.navy);
+        }
+        this.box([x - 0.7, 1.78, z + side * 3], [0.65, 0.42, 0.14], C.navy, undefined, [0.18, 0, 0]);
+        this.box([x - 0.7, 1.8, z + side * 3 - 0.08], [0.52, 0.28, 0.02], C.teal, undefined, undefined, true);
+        // Low service raceway follows the outside of the robot footprint.
+        this.box([x, 0.32, z + side * 2.55], [3.1, 0.15, 0.24], C.steel);
+        for (let clip = 0; clip < 7; clip++)
+          this.box([x - 1.35 + clip * 0.45, 0.42, z + side * 2.55], [0.07, 0.055, 0.29], C.navy);
+        for (const dx of [-1.3, 1.3]) {
+          this.cyl([x + dx, 0.45, z + side * 2.6], 0.16, 0.65, C.yellow);
+          this.cyl([x + dx, 0.65, z + side * 2.6], 0.17, 0.11, C.navy);
+        }
       }
       // Inspection portal and control terminal.
       for (const dz of [-1, 1])
         this.brick([0.8, 2, z + dz], [0.35, 3.4, 0.35], C.navy);
       this.brick([0.8, 3.6, z], [0.5, 0.35, 2.4], m.color);
+      // Inspection optics and a broad task-light housing clear the module path.
+      this.box([0.8, 3.4, z], [0.56, 0.14, 2.1], C.steel);
+      for (const dz of [-0.72, 0.72]) {
+        this.box([0.8, 3.26, z + dz], [0.32, 0.2, 0.28], C.navy);
+        this.cyl([0.8, 3.12, z + dz], 0.17, 0.09, C.glass);
+      }
+      for (const dz of [-1.34, 1.34]) {
+        this.box([-7, 0.28, z + dz], [16.6, 0.026, 0.055], C.cream);
+        for (let seam = 0; seam < 8; seam++)
+          this.box([-14 + seam * 2, 0.265, z + dz * 1.25], [0.025, 0.016, 0.52], C.steel);
+      }
+
       this.box(
         [0.8, 3.37, z],
         [0.24, 0.12, 0.6],
@@ -1134,6 +1158,7 @@ export class FactoryWorld {
       site: [[0, 0.8, 0], 88, -1.28, 0.67],
       machinery: [[7, 2, -3], 7.5, -2.2, 1.2],
       delivery: [[-29, 1.6, 0], 13, -2.4, 1.15],
+      production: [[-7, 1.3, -12], 14, -1.1, 0.95],
     };
     // Vehicle detail isolates the product by hiding only the two foreground
     // robots in this explicitly synthetic review fixture; cell view restores them.

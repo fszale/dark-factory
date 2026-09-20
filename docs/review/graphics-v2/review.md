@@ -41,3 +41,8 @@ User reviewed the first vehicle checkpoint positively and authorized continued G
 `delivery-1080p.png` is an actual 1920×1080 browser render in the explicitly synthetic atelier. Added a Delivery camera. This image is a modeling review, not evidence of a completed shipment. The operating local factory was also run and paused with upgraded vehicle assembly geometry visible.
 
 Validation: 111 tests across 14 files passed with a 30-second per-test allowance. The first run hit three existing 5-second simulation-test timeouts while browser/build work competed for resources; no assertion failures occurred. The increased-timeout run passed all tests, including truck geometry bounds, cargo datum preservation and pallet load-space clearance. Production build passed. New full animated shipment review and post-publication checks remain pending. Prior stress figures above belong to the first checkpoint, not a new measurement of the truck additions.
+
+
+## Production-detail pass — 2026-09-20
+
+Added vented machine cabinets, handles and control displays, low service raceways and clips, protective bollards, inspection optics and housings, and floor seams/line boundaries across the five stations. Removed decorative brick stacks beside robot cells so they do not imply untracked inventory. Simulation transfers, recipe timing and material state are unchanged. A new Production camera in the synthetic atelier supports repeatable review; `production-detail-1080p.png` is an actual browser capture at 1920×1080. All 111 tests passed with the existing 30-second test allowance. This bounded detail pass is not final reference-quality acceptance or a fresh stress benchmark.
