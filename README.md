@@ -29,7 +29,7 @@ Use the [guided tour](docs/guided-tour.md) to follow receiving, module productio
 
 Run `npm test` for deterministic engine, provider-boundary, audio, and API checks. Open `/benchmark.html` for the explicit synthetic rendering stress scene. Run `BRICKWORKS_TEST_URL=http://localhost:3000 node scripts/soak.mjs` against a production server for the two-hour wall-clock server/WebSocket check.
 
-The final local source passed typecheck, production build, and **107 tests across 12 files**. The preserved two-hour local runtime artifact is [`docs/review/release-soak.json`](docs/review/release-soak.json): its 121 scheduled samples reached 7,200 seconds, while a duplicate finalization sample caused the recorded harness failure. The [independent assessment](docs/review/release-soak-assessment.md) records the observed data and corrected harness without relabeling that artifact as passed. Replit publication follows local acceptance and account setup.
+The final local source passed typecheck, production build, and **107 tests across 12 files**. The corrected two-hour server/WebSocket soak [passed](docs/review/release-soak-corrected.json): 121 scheduled samples reached 7,200.012 seconds with zero material/receiving imbalance and stream errors, strict frame growth, and bounded retained events/samples. Its [assessment](docs/review/release-soak-corrected-assessment.md) records measured memory and runtime hashes. The earlier finalization-limited artifact remains preserved separately. Replit publication is handled after local acceptance and account setup.
 
 ## AI providers and privacy
 

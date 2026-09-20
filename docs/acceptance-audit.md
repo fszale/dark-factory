@@ -38,6 +38,6 @@ Physical machine behavior, gripper forces, safety validation, actual production 
 
 ## Recommended closure order
 
-1. Preserve the assessed `docs/review/release-soak.json` for core session 88170: its scheduled samples cover two hours, but the artifact remains failed because finalization made a duplicate terminal frame comparison. Run the corrected harness only if a clean wall-clock PASS is required; `pre-station-pause-soak.json` is superseded.
-2. Inspect downloaded CSV/JSON, checkpoint, and history contents; observe rework history and rejected/truncated replay if deeper evidence is needed.
-3. Bounded live-provider evidence is complete; broader provider evaluation remains separate. A human audio listening review is unrecorded. Reserved VM publication follows local acceptance/account setup; formal accessibility certification is not a local-release gate.
+1. The corrected clean-harness two-hour soak now passes: 121 samples through 7200.012 seconds with strict frame progress, zero conservation/stream errors, and bounded retention. Its [assessment](review/release-soak-corrected-assessment.md) records the exact counts and hashes; the failed pre-fix artifact remains historical.
+2. Inspect downloaded CSV/JSON, checkpoint, and history contents if file-level evidence is needed.
+3. Bounded live-provider evidence is complete; broader provider evaluation remains separate. A human audio listening review is unrecorded. Replit Reserved VM publication requires its own deployment evidence; formal accessibility certification is not a local-release gate.
