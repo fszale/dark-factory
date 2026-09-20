@@ -32,3 +32,12 @@ Stress window: 76 seconds, 75 FPS samples, 5,088 scene meshes; mean 53.8 FPS, mi
 | Functional correctness | 110 tests passed across 13 files | TypeScript and production build passed after all checkpoint changes, including three geometry checks. A full animated runtime pass remains part of checkpoint closure |
 
 Next: obtain visual direction on the product/cell, finish practical lights, smaller fixtures and scene density, enhance delivery assets, then validate all operational camera routes, animated transfers, quality tiers/LOD and bounded rendering memory. This checkpoint is not the completed graphics upgrade. Authenticated production Astra/Jev calls also remain pending user access-code validation, distinct from the passed public simulation smoke checks.
+
+
+## Delivery checkpoint — 2026-09-20
+
+User reviewed the first vehicle checkpoint positively and authorized continued GitHub/Replit updates. Added a shared detailed truck builder: hollow glazed cab/interior, mirrors, grille, six treaded wheels, fenders, flatbed and marker lamps. Body geometry is compacted by material before cargo creation; existing pallet transforms and unloading logic remain unchanged. Added receiving dock frames, bumpers, inspection portal and control cabinet. Moved approach-road lamps to the outer verge after browser inspection exposed a conflict with the truck envelope.
+
+`delivery-1080p.png` is an actual 1920×1080 browser render in the explicitly synthetic atelier. Added a Delivery camera. This image is a modeling review, not evidence of a completed shipment. The operating local factory was also run and paused with upgraded vehicle assembly geometry visible.
+
+Validation: 111 tests across 14 files passed with a 30-second per-test allowance. The first run hit three existing 5-second simulation-test timeouts while browser/build work competed for resources; no assertion failures occurred. The increased-timeout run passed all tests, including truck geometry bounds, cargo datum preservation and pallet load-space clearance. Production build passed. New full animated shipment review and post-publication checks remain pending. Prior stress figures above belong to the first checkpoint, not a new measurement of the truck additions.

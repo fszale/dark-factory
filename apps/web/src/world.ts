@@ -1,4 +1,5 @@
 import { buildSiteDetail } from "./visuals/site-detail";
+import { buildDeliveryTruck } from "./visuals/delivery-truck";
 import { buildRobotaxiModule } from "./visuals/robotaxi";
 import {
   Engine,
@@ -577,7 +578,20 @@ export class FactoryWorld {
         true,
       );
     }
-    this.label("01  RECEIVING", [-27, 3.8, -16.8], 7, 1, "#263e49");
+    // Receiving equipment stays outside the moving pallet and truck envelopes.
+    // Fixed fixtures add scale without inventing inventory.
+    for (const z of [-10, 0, 10]) {
+      for (const dz of [-3.25, 3.25]) {
+        this.brick([-27.8, 2.55, z + dz], [0.36, 4.7, 0.36], C.navy);
+        this.box([-27.8, 0.62, z + dz], [0.65, 0.8, 0.65], C.yellow);
+        this.box([-27.8, 2.95, z + dz], [0.42, 0.2, 0.42], C.orange, undefined, undefined, true);
+      }
+      this.box([-27.8, 4.85, z], [0.55, 0.36, 6.9], C.navy);
+      this.box([-27.65, 4.62, z], [0.18, 0.12, 5.3], C.white, undefined, undefined, true);
+      this.box([-28.05, 0.44, z], [1.1, 0.17, 5.3], C.steel);
+      for (const dz of [-2.6, 2.6]) this.box([-28.6, 0.62, z + dz], [0.22, 0.55, 0.45], C.rubber);
+    }
+    this.label("01  RECEIVING", [-27, 5.7, -16.8], 7, 1, "#263e49");
     // Receiving sortation spine: one inspected lot splits into five color-coded kit streams.
     const sorter = new TransformNode("receiving-sorter", this.scene);
     sorter.position.set(-26.2, 0, 0);
@@ -587,6 +601,15 @@ export class FactoryWorld {
     this.conveyor(0, 0, 26, C.teal);
     this.buildParent = undefined;
     this.label("INSPECT  /  SORT  /  STORE", [-26.2, 3.8, 15], 7, 0.65, "#263e49");
+    for (const x of [-27.35, -25.05]) {
+      this.brick([x, 2.35, -13], [0.22, 3.8, 0.28], C.navy);
+      this.box([x, 0.6, -13], [0.65, 0.35, 0.8], C.steel);
+    }
+    this.box([-26.2, 4.3, -13], [2.65, 0.3, 0.5], C.teal);
+    this.box([-26.2, 4.07, -13], [1.8, 0.08, 0.15], C.white, undefined, undefined, true);
+    this.box([-24.8, 1.75, -14.5], [0.65, 1.8, 0.75], C.navy);
+    this.box([-25.15, 2.12, -14.5], [0.07, 0.55, 0.52], C.teal, undefined, undefined, true);
+
     for (const line of LINE_IDS) {
       const z = LINE_META[line].z;
       this.conveyor(-25.1, z, 2.2, LINE_META[line].color);
@@ -809,7 +832,7 @@ export class FactoryWorld {
     for (let z = -16; z <= 16; z += 8) {
       this.tree(-42, z);
       this.lamp(25, z);
-      this.lamp(-31, z);
+      this.lamp(-40, z);
     }
     this.label("BRICKWORKS", [0, 1.8, 24], 15, 2, "#23414e");
     this.label(
@@ -1048,13 +1071,8 @@ export class FactoryWorld {
   private truck(id: string) {
     const r = new TransformNode(id, this.scene);
     r.metadata = { entity: id };
-    this.brick([0, 0.7, 0], [2.6, 0.4, 7], C.navy, r);
-    this.brick([0, 1.65, -2.6], [2.7, 1.7, 2], C.teal, r);
-    this.box([0, 2, -3.65], [2.4, 0.7, 0.07], C.glass, r);
-    this.box([0, 1, -3.66], [2.3, 0.12, 0.07], C.white, r, undefined, true);
-    for (const z of [-2.5, 1.8, 2.7])
-      for (const x of [-1.4, 1.4])
-        this.cyl([x, 0.65, z], 1.1, 0.35, C.rubber, r, [0, 0, Math.PI / 2]);
+    buildDeliveryTruck({ box: this.box.bind(this), brick: this.brick.bind(this), cyl: this.cyl.bind(this) }, r);
+    this.compactAssembly(r, "delivery-truck:body");
     const cargo = new TransformNode("cargo", this.scene);
     cargo.parent = r;
     const pallets: TransformNode[] = [];
@@ -1093,6 +1111,8 @@ export class FactoryWorld {
   }
   /** Explicit art-review fixture, not a production vehicle or inventory item. */
   addArtReviewVehicle() {
+    const reviewTruck = this.truck("art-review-truck");
+    reviewTruck.position.set(-29, 0.2, 0);
     const vehicle = this.car("art-review-vehicle");
     vehicle.position.set(10, 1.24, 0);
     vehicle.rotation.y = Math.PI;
@@ -1113,6 +1133,7 @@ export class FactoryWorld {
       cell: [[10, 2.2, 0], 16, -2.05, 1.1],
       site: [[0, 0.8, 0], 88, -1.28, 0.67],
       machinery: [[7, 2, -3], 7.5, -2.2, 1.2],
+      delivery: [[-29, 1.6, 0], 13, -2.4, 1.15],
     };
     // Vehicle detail isolates the product by hiding only the two foreground
     // robots in this explicitly synthetic review fixture; cell view restores them.

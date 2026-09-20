@@ -36,7 +36,11 @@ I'm making the project open source so others can explore it, challenge its assum
 | ![Actual application capture: full factory site, roads and parking](docs/review/site-1080p.png) | ![Actual application capture: final assembly machinery](docs/review/assembly-1080p.png) |
 | **Actual application capture** — the connected factory world | **Actual application capture** — component joining |
 
-These captures show the current visual foundation. A [reference-led graphics upgrade](docs/plans/reference-graphics-upgrade.md) is planned to bring the models, machinery, lighting and site detail much closer to the concept image above.
+These captures show the current visual foundation. A [reference-led graphics upgrade](docs/plans/reference-graphics-upgrade.md) is in progress to bring the models, machinery, lighting and site detail much closer to the concept image above.
+
+![Actual browser render: upgraded procedural gold robotaxi](docs/review/graphics-v2/robotaxi-1080p.png)
+
+**Graphics checkpoint:** actual interactive renderer in the synthetic visual atelier, not a production run. The shared robotaxi geometry is used by the operating factory; [review evidence](docs/review/graphics-v2/review.md) records remaining visual work and measured performance.
 
 **One continuous manufacturing journey:**
 
@@ -59,7 +63,7 @@ Astra supervises the factory and TypeSafe Jev provides bounded operational judgm
 | Stage | Purpose | Status |
 | --- | --- | --- |
 | **1 · Virtual factory** | Operate the full material-to-product loop, instrument it, and test orchestration | Working public prototype; acceptance evidence tracked separately |
-| **2 · Visual and operational refinement** | Improve realism, usability, experiments and the reference product | Graphics plan prepared; implementation awaits review |
+| **2 · Visual and operational refinement** | Improve realism, usability, experiments and the reference product | Reference upgrade in progress; first vehicle/cell checkpoint reviewed |
 | **3 · Physical tabletop factory** | Build with bricks or similar mechanics; validate real sensing, handling and control | Planned |
 | **4 · Industrial pilot** | Select a useful product, seek investment and a plant partner, commission a bounded production process | Longer-term ambition |
 
@@ -96,7 +100,7 @@ Use the [guided tour](docs/guided-tour.md) to follow receiving, module productio
 
 Run `npm test` for deterministic engine, provider-boundary, audio, and API checks. Open `/benchmark.html` for the explicit synthetic rendering stress scene. Run `BRICKWORKS_TEST_URL=http://localhost:3000 node scripts/soak.mjs` against a production server for the two-hour wall-clock server/WebSocket check.
 
-The final local source passed typecheck, production build, and **107 tests across 12 files**. The corrected two-hour server/WebSocket soak [passed](docs/review/release-soak-corrected.json): 121 scheduled samples reached 7,200.012 seconds with zero material/receiving imbalance and stream errors, strict frame growth, and bounded retained events/samples. Its [assessment](docs/review/release-soak-corrected-assessment.md) records measured memory and runtime hashes. The earlier finalization-limited artifact remains preserved separately. The application is now published on Replit. Both provider configurations and rejection of unauthenticated AI requests were verified on the public deployment; authenticated production provider responses remain a separate acceptance check.
+The final local source passed typecheck, production build, and **111 tests across 14 files**. The corrected two-hour server/WebSocket soak [passed](docs/review/release-soak-corrected.json): 121 scheduled samples reached 7,200.012 seconds with zero material/receiving imbalance and stream errors, strict frame growth, and bounded retained events/samples. Its [assessment](docs/review/release-soak-corrected-assessment.md) records measured memory and runtime hashes. The earlier finalization-limited artifact remains preserved separately. The application is now published on Replit. Both provider configurations and rejection of unauthenticated AI requests were verified on the public deployment; authenticated production provider responses remain a separate acceptance check.
 
 ## AI providers and privacy
 
