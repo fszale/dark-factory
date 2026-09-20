@@ -71,3 +71,12 @@ The owner accepted the current visuals and requested closure after checking the 
 The public browser also advanced the existing factory to 16:51 with 19 dispatches and 2 parked vehicles, responded to Pause, and restored that paused checkpoint with a connected live stream after reload. The previously recorded real advisory provider responses remain valid evidence; no new paid calls were made during closeout. No runtime changes or republish were needed.
 
 This closes the **owner-accepted virtual factory/demo milestone**. The earlier finite-one-order timeout is retained as a separate unresolved test case; the current default-flow pass does not explain or erase it. Further hero-image refinement, strict performance-floor certification, formal audio/accessibility review, durable external archival, and physical commissioning remain future work, not claims of this closure.
+
+
+## Network animation jitter correction — 2026-09-20
+
+Source `339cccb` replaces per-packet animation-time resets with a monotonic presentation clock. Incoming authoritative snapshots gently adjust playback pace; normal network arrivals no longer rewind every animated object. Pause/step and session/epoch reset remain authoritative; extrapolation is bounded on disconnection. Simulation, inventory and server timing are unchanged.
+
+Eight focused animation-clock/wheel tests passed, including irregular/bunched packets at 1x and 10x, paused/stepped time, reset and disconnected bounds; typecheck and production build passed. A same-stream comparison against real public WebSocket arrivals recorded 58 backward steps with the former formula and zero with the corrected clock across 861 samples/78 packets over 15 seconds. Largest old reversal was 0.123 simulated seconds. [Timing evidence](review/graphics-v2/jitter-timing.json) is a presentation-clock check, not a GPU performance benchmark. The local renderer was refreshed and visually reviewed after hot reload.
+
+Replit merge `5d2e659` was published with destination status **Live** on the existing VM. The public page serves the exact locally built corrected renderer `world-C_JaZ9Vy.js` and app `app-B9DRbT4w.js`; health is OK and AI access remains required. Browser reload recovered the 16:51 checkpoint; at 1x production advanced through 17:06 and dispatch rose from 19 to 20, with the corrected scene rendered and Pause checked. Rollback source: `438447b`.
