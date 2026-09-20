@@ -1,8 +1,75 @@
-# Brickworks Dark Factory
+<div align="center">
 
-Brickworks is an interactive, end-to-end simulation of a brick-built autonomous factory. Delivery trucks supply five parallel module lines: front structure, rear structure, battery and floor, interior, and exterior. Carts deliver material kits to the lines; inspected modules converge on joining, then each gold robotaxi moves through testing, driving, parking, and dispatch.
+# BRICKWORKS
+### Build the factory in software. Learn from it. Bring it into the physical world.
 
-It is a software simulation and visual storytelling environment. It does not control machinery, validate physical equipment, or make production decisions outside the in-memory session.
+**An open-source exploration of autonomous manufacturing—from the first delivery to the finished product.**
+
+[**Explore the live factory →**](https://dark-factory-fszale.replit.app/) · [Follow the production tour](docs/guided-tour.md) · [See the visual roadmap](docs/plans/reference-graphics-upgrade.md)
+
+</div>
+
+![Visual target: a detailed brick-built factory, gold robotaxi, robotic assembly cells and parallel production lines](docs/assets/visual-target.png)
+
+*Where we are heading: original AI-generated concept art for Brickworks. This is the visual target, not a screenshot of the current application. [Asset provenance](docs/assets/README.md).*
+
+## Why I am building this
+
+I'm building a dark factory virtually first: a place to see how materials move, how machines cooperate, where production gets stuck, and how AI can help us make better operating decisions.
+
+The first product is a brick-built gold robotaxi. It gives the factory a concrete challenge: manufacture five major components in parallel, bring them together late in the process, inspect the completed vehicle, and let it drive itself out to parking. The real subject is the factory around it—the deliveries, sorting, inventory, handling, assembly, quality, maintenance and dispatch that make autonomous production possible.
+
+My next step is to build a physical version using LEGO-style bricks or similar mechanics. That tabletop factory will let me confront what software alone cannot prove: gripping, alignment, sensing, tolerances, reliability and safe operation.
+
+The longer-term ambition is to find an investor and a plant partner, carry those lessons into a real manufacturing environment, and produce useful parts that help power our future industry. The final industrial product is still to be chosen. The robotaxi is our first learning model.
+
+I'm making the project open source so others can explore it, challenge its assumptions, improve it, and help bridge the distance between a virtual factory and a useful physical one.
+
+— **Filip Szalewicz**
+
+## Step inside the working prototype
+
+[**Launch Brickworks on Replit**](https://dark-factory-fszale.replit.app/). Start the factory, follow a shipment, inspect a station, introduce a disruption, or watch a vehicle reach its parking bay. The simulation is available without an AI key; paid live-AI controls require the private access code.
+
+| The operating site | Inside the assembly hall |
+| --- | --- |
+| ![Actual application capture: full factory site, roads and parking](docs/review/site-1080p.png) | ![Actual application capture: final assembly machinery](docs/review/assembly-1080p.png) |
+| **Actual application capture** — the connected factory world | **Actual application capture** — component joining |
+
+These captures show the current visual foundation. A [reference-led graphics upgrade](docs/plans/reference-graphics-upgrade.md) is planned to bring the models, machinery, lighting and site detail much closer to the concept image above.
+
+**One continuous manufacturing journey:**
+
+Delivery trucks → receiving and inspection → brick sorting and storage → material kits → five parallel component lines → final assembly and testing → autonomous drive-out → parking → dispatch.
+
+| Parallel line | What it contributes |
+| --- | --- |
+| Front | Structure, axle, wheels and lightbar |
+| Rear | Structure, simulated drive unit, axle and wheels |
+| Battery / floor | Structural tray, simulated battery blocks and floor |
+| Interior | Seats, console and cabin insert |
+| Exterior | Gold panels, doors, canopy and roof |
+
+Finite inventory and capacity create real constraints inside the simulation. Material lots connect to vehicle genealogy; faults and delays propagate through the factory. Live monitoring exposes throughput, quality, queues, utilization and simulated maintenance/economic observations.
+
+Astra supervises the factory and TypeSafe Jev provides bounded operational judgments. Deterministic controllers validate their actions; models cannot bypass inventory or directly manipulate the 3D world. Energy, wear and cost values are simulated estimates, not measured industrial performance.
+
+## From virtual factory to useful industry
+
+| Stage | Purpose | Status |
+| --- | --- | --- |
+| **1 · Virtual factory** | Operate the full material-to-product loop, instrument it, and test orchestration | Working public prototype; acceptance evidence tracked separately |
+| **2 · Visual and operational refinement** | Improve realism, usability, experiments and the reference product | Graphics plan prepared; implementation awaits review |
+| **3 · Physical tabletop factory** | Build with bricks or similar mechanics; validate real sensing, handling and control | Planned |
+| **4 · Industrial pilot** | Select a useful product, seek investment and a plant partner, commission a bounded production process | Longer-term ambition |
+
+The physical stages require their own engineering, safety and economic validation. A successful simulation is a way to learn faster, not proof that a production plant is ready.
+
+## Build with us
+
+Contributions are welcome in simulation correctness, production recipes, original 3D assets, visualization, metrics and future hardware adapters. Start with the [architecture](docs/architecture.md) and [station adapter boundary](docs/station-adapters.md), or [open an issue](https://github.com/fszale/dark-factory/issues) to discuss a concrete improvement.
+
+For AI-assisted work, [AGENTS.md](AGENTS.md) routes to four project-specific skills under `.agent/skills`: factory development, visual review, release verification and project storytelling. They preserve the lessons and decisions behind this project as it grows.
 
 ## Run locally
 
@@ -29,7 +96,7 @@ Use the [guided tour](docs/guided-tour.md) to follow receiving, module productio
 
 Run `npm test` for deterministic engine, provider-boundary, audio, and API checks. Open `/benchmark.html` for the explicit synthetic rendering stress scene. Run `BRICKWORKS_TEST_URL=http://localhost:3000 node scripts/soak.mjs` against a production server for the two-hour wall-clock server/WebSocket check.
 
-The final local source passed typecheck, production build, and **107 tests across 12 files**. The corrected two-hour server/WebSocket soak [passed](docs/review/release-soak-corrected.json): 121 scheduled samples reached 7,200.012 seconds with zero material/receiving imbalance and stream errors, strict frame growth, and bounded retained events/samples. Its [assessment](docs/review/release-soak-corrected-assessment.md) records measured memory and runtime hashes. The earlier finalization-limited artifact remains preserved separately. Replit publication is handled after local acceptance and account setup.
+The final local source passed typecheck, production build, and **107 tests across 12 files**. The corrected two-hour server/WebSocket soak [passed](docs/review/release-soak-corrected.json): 121 scheduled samples reached 7,200.012 seconds with zero material/receiving imbalance and stream errors, strict frame growth, and bounded retained events/samples. Its [assessment](docs/review/release-soak-corrected-assessment.md) records measured memory and runtime hashes. The earlier finalization-limited artifact remains preserved separately. The application is now published on Replit. Both provider configurations and rejection of unauthenticated AI requests were verified on the public deployment; authenticated production provider responses remain a separate acceptance check.
 
 ## AI providers and privacy
 
@@ -45,4 +112,4 @@ The runnable JSON checkpoint keeps a bounded working trace so it stays practical
 
 ## Scope and attribution
 
-The scene geometry, procedural materials/audio, application code, and documentation are original MIT-licensed work. The visual language is generic brick-built industrial design: it uses no LEGO, Tesla, or other third-party logos, brands, trade dress, or brand-derived source assets. The sole non-original runtime asset is Babylon.js `studio.env`, served locally as lighting/reflection data under CC BY 4.0 with in-app attribution; see the asset inventory below. The system design is informed at a high level by public material-flow concepts, including [WO2024182432A1](https://patents.google.com/patent/WO2024182432A1/en), but does not reproduce Tesla's implementation, claims, drawings, or terminology. See [source and asset policy](docs/source-and-assets.md) and the [asset inventory](docs/assets/README.md).
+The scene geometry, procedural materials/audio, application code, and documentation are original MIT-licensed work. The visual language is generic brick-built industrial design: it uses no LEGO or Tesla corporate logos or supplied model assets. This is an independent educational model, not an affiliated or endorsed product. The sole non-original runtime asset is Babylon.js `studio.env`, served locally as lighting/reflection data under CC BY 4.0 with in-app attribution; see the asset inventory below. The system design is informed at a high level by public material-flow concepts, including [WO2024182432A1](https://patents.google.com/patent/WO2024182432A1/en), but does not reproduce Tesla's implementation, claims, drawings, or terminology. See [source and asset policy](docs/source-and-assets.md) and the [asset inventory](docs/assets/README.md).
