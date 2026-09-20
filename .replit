@@ -10,6 +10,7 @@ PORT = "3000"
 build = ["sh", "-c", "npm ci && npm run build"]
 run = ["npm", "start"]
 deploymentTarget = "vm"
+ignorePorts = false
 
 [[ports]]
 localPort = 3000
