@@ -1,0 +1,29 @@
+{
+  "date": "2026-09-20T17:01:21.391Z",
+  "source": "62073fe",
+  "replitMerge": "43c2971",
+  "status": "Live",
+  "health": {
+    "ok": true,
+    "providers": {
+      "astra": {
+        "configured": true,
+        "status": "configured"
+      },
+      "jev": {
+        "configured": true,
+        "status": "configured"
+      },
+      "accessRequired": true
+    },
+    "application": {
+      "uptimeSeconds": 30.300924916,
+      "heapUsedBytes": 20770752,
+      "rssBytes": 107868160,
+      "activeSessions": 1,
+      "viewers": 1,
+      "tickProcessingMs": 2.210595000000467
+    }
+  },
+  "productionCamera": true
+}

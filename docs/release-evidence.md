@@ -43,3 +43,8 @@ Replit republish completed with destination status **Live** on the existing 0.5 
 The browser restored the existing paused checkpoint at 1:40 with one parked vehicle after replacement and displayed “Live session connected”. Genuine authenticated provider responses remain a separate pending check; this release did not make paid model calls. Rollback graphics source: `5dab074` (retain current private deployment secrets and VM settings).
 
 Post-release browser run advanced from 1:40 to 2:05, changed station states and throughput, and responded to Pause. The public tab was left paused at 2:05.
+
+
+## Production-cell detail published — 2026-09-20
+
+Source `62073fe`, preserved Replit history in merge `43c2971`, deployed with status Live on the same 0.5 vCPU / 2 GiB VM. Local 111 tests and production build passed. The public atelier serves the new Production camera; health is OK with both providers configured and access required. Browser recovery restored 2:05 and a connected stream; running advanced to 2:15, including a five-module joining reservation and taxi-2 entering parking. [Release observation](review/graphics-v2/production-detail-release.json) and [actual 1080p modeling review](review/graphics-v2/production-detail-1080p.png) are retained. No fresh stress/soak or paid-provider certification is claimed for this small visual pass. Rollback source: `35706e1`.
