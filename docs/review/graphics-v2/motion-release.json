@@ -1,0 +1,28 @@
+{
+  "observedAt": "2026-09-20T20:07:16.632342+00:00",
+  "origin": "https://dark-factory-fszale.replit.app",
+  "sourceCommit": "1967dac",
+  "replitMergeCommit": "be8562c",
+  "destinationStatus": "Live",
+  "machine": "0.5 vCPU / 2 GiB RAM",
+  "health": {
+    "ok": true,
+    "astraConfigured": true,
+    "jevConfigured": true,
+    "accessRequired": true
+  },
+  "newAtelierPatrolControlServed": true,
+  "browser": {
+    "checkpointRecoveredAt": "2:15",
+    "liveStreamConnected": true,
+    "runningHumanoidObserved": true,
+    "pausedAt": "2:37",
+    "capture": "motion-public.png"
+  },
+  "rollbackSource": "a822715",
+  "limits": [
+    "Provider responses recorded separately before visual-only publication; backend unchanged.",
+    "Aesthetic similarity is qualitative, not a measured 80-percent match.",
+    "This release does not repeat the full two-hour soak."
+  ]
+}

@@ -1,0 +1,108 @@
+{
+  "observedAt": "2026-09-20T20:16:54.137Z",
+  "origin": "https://dark-factory-fszale.replit.app",
+  "status": "PASS",
+  "samples": [
+    {
+      "time": 27.5,
+      "running": true,
+      "speed": 10,
+      "received": 0,
+      "completed": 0,
+      "dispatched": 0,
+      "conservationDelta": 0,
+      "receivingConservationDelta": 0
+    },
+    {
+      "time": 55,
+      "running": true,
+      "speed": 10,
+      "received": 75,
+      "completed": 0,
+      "dispatched": 0,
+      "conservationDelta": 0,
+      "receivingConservationDelta": 0
+    },
+    {
+      "time": 82.5,
+      "running": true,
+      "speed": 10,
+      "received": 75,
+      "completed": 1,
+      "dispatched": 0,
+      "conservationDelta": 0,
+      "receivingConservationDelta": 0
+    },
+    {
+      "time": 110,
+      "running": true,
+      "speed": 10,
+      "received": 75,
+      "completed": 1,
+      "dispatched": 0,
+      "conservationDelta": 0,
+      "receivingConservationDelta": 0
+    },
+    {
+      "time": 138.75,
+      "running": true,
+      "speed": 10,
+      "received": 75,
+      "completed": 2,
+      "dispatched": 0,
+      "conservationDelta": 0,
+      "receivingConservationDelta": 0
+    },
+    {
+      "time": 167.5,
+      "running": true,
+      "speed": 10,
+      "received": 75,
+      "completed": 2,
+      "dispatched": 0,
+      "conservationDelta": 0,
+      "receivingConservationDelta": 0
+    },
+    {
+      "time": 195,
+      "running": true,
+      "speed": 10,
+      "received": 75,
+      "completed": 3,
+      "dispatched": 1,
+      "conservationDelta": 0,
+      "receivingConservationDelta": 0
+    }
+  ],
+  "health": true,
+  "aiAccessRequired": true,
+  "crossTokenStatus": 401,
+  "chatUnauthorized": 403,
+  "jevUnauthorized": 403,
+  "sessionIsolation": true,
+  "websocket": {
+    "frames": 160,
+    "lastSequence": 168,
+    "streamError": false
+  },
+  "cleanup": [
+    {
+      "paused": true,
+      "timeStable": true
+    },
+    {
+      "paused": true,
+      "timeStable": true
+    }
+  ],
+  "browser": {
+    "origin": "https://dark-factory-fszale.replit.app",
+    "ranAtSpeed": 10,
+    "pausedAt": "16:51",
+    "dispatched": 19,
+    "parked": 2,
+    "reloadRestoredPausedCheckpoint": true,
+    "liveSessionConnected": true
+  },
+  "acceptance": "User accepted current visual/demo milestone; remaining original-plan refinements are future work."
+}

@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "observedAt": "2026-09-20T16:23:00.000Z",
+  "target": "https://dark-factory-fszale.replit.app",
+  "status": "BLOCKED",
+  "scope": "nonpaid disposable graphics-v2 production REST and WebSocket acceptance",
+  "releaseGate": {
+    "atelierStatus": 200,
+    "patrolMarker": true
+  },
+  "verifiedBeforeTimeout": {
+    "applicationHealth": true,
+    "twoDisposableSessionsCreatedPerAttempt": true,
+    "crossSessionTokenStatus": 401,
+    "astraAnonymousStatus": 403,
+    "jevAnonymousStatus": 403,
+    "anonymousError": "AI access code required.",
+    "providerCallsReached": false,
+    "websocketAuthenticated": true
+  },
+  "attempts": [
+    {
+      "seed": 92101,
+      "continuous": false,
+      "orderSize": 1,
+      "speed": 10,
+      "dispatchDwell": 80,
+      "wallClockTimeoutSeconds": 70,
+      "result": "dispatch timeout"
+    },
+    {
+      "seed": 92111,
+      "continuous": false,
+      "orderSize": 1,
+      "speed": 10,
+      "dispatchDwell": 5,
+      "wallClockTimeoutSeconds": 90,
+      "result": "dispatch timeout"
+    }
+  ],
+  "notEstablished": [
+    "receivingObserved",
+    "completed",
+    "dispatched",
+    "conservationDeltaZero",
+    "receivingConservationDeltaZero",
+    "secondSessionUnchangedAfterRun",
+    "runPausedAfterDispatch"
+  ],
+  "cleanup": {
+    "pauseAttemptedAfterTimeout": false,
+    "reason": "The exited harness processes did not persist session IDs or tokens, so the disposable sessions were no longer addressable.",
+    "fallback": "Existing server session lifetime cleanup."
+  },
+  "limitations": [
+    "The bounded harness threw on timeout before retaining its latest snapshot, so no terminal production counters are claimed.",
+    "The timeout path did not issue the planned pause command; disposable sessions rely on the existing server session lifetime cleanup.",
+    "No secret was read and no paid provider request was reached."
+  ]
+}

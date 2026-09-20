@@ -53,3 +53,21 @@ Source `62073fe`, preserved Replit history in merge `43c2971`, deployed with sta
 ## Genuine production AI acceptance — 2026-09-20
 
 Both public-provider advisory checks passed through the native Chrome Intelligence panel using the existing private deployment access code. Astra responded in 6,767 ms (1,497 reported tokens), proposing `start` for the paused healthy run; the UI recorded that it was not applied in advisory mode. Jev returned hold in 384 ms (2,020 reported tokens), with no operational change. [Sanitized evidence](review/graphics-v2/live-ai-acceptance.json) records scope. These are real provider responses, not configured flags or fixtures, and supersede the earlier pending authenticated-production check. They do not prove autonomous improvement or long-run reliability. Server/provider code is unchanged by the visual update.
+
+
+## Motion and atmosphere published — 2026-09-20
+
+Source `1967dac`, Replit merge `be8562c`, is confirmed **Live** on the unchanged 0.5 vCPU / 2 GiB VM. Public health is OK and live AI remains access-controlled. The served atelier includes the new Humanoids camera. Browser recovery restored the paused 2:15 checkpoint; production and humanoid patrols visibly advanced, then Pause stopped the review at 2:37. See [release observation](review/graphics-v2/motion-release.json) and [public runtime capture](review/graphics-v2/motion-public.png). Rollback source: `a822715`.
+
+117 tests across 15 files and the production build passed. Independent wheel motion, three decorative humanoid patrols, warm task lighting and cutaway refinements are described in the [graphics review](review/graphics-v2/review.md). The 1080p 32-vehicle production-renderer stress window averaged 38.6 FPS (p5 32.5; minimum 28.7), so a sustained 30 FPS floor and 60 FPS normal-scene target are not certified. No fresh two-hour soak or measured 80-percent reference-image match is claimed.
+
+The fresh [bounded public REST/WebSocket smoke](review/graphics-v2/motion-production-smoke.json) is **BLOCKED**, not passed. Health, authenticated WebSocket connection, cross-session token rejection (401), and unauthorized Astra/Jev rejection (403) passed. Two finite one-order runs hit 70/90-second timeouts before the required completed-and-dispatched condition; the harness failed to retain terminal snapshots. Consequently this run establishes neither an end-to-end dispatch pass nor a production regression, and does not certify material balance. Preserve this failure and improve the timeout diagnostics before repeating acceptance. The older passed soak remains historical evidence, not a substitute for this release check.
+
+
+## Accepted milestone and goal closure — 2026-09-20
+
+The owner accepted the current visuals and requested closure after checking the deployed application. A fresh default balanced-production run on Replit **passed**: 75 incoming material units received, 3 vehicles completed, and 1 dispatched by simulation time 195 seconds. All seven sampled material and receiving conservation deltas were zero. 160 authenticated WebSocket frames advanced without sequence regression; a second session remained unchanged, cross-session credentials returned 401, and anonymous Astra/Jev requests returned 403. Both disposable test sessions were paused and confirmed time-stable. See [retained closeout evidence](review/graphics-v2/goal-closeout.json).
+
+The public browser also advanced the existing factory to 16:51 with 19 dispatches and 2 parked vehicles, responded to Pause, and restored that paused checkpoint with a connected live stream after reload. The previously recorded real advisory provider responses remain valid evidence; no new paid calls were made during closeout. No runtime changes or republish were needed.
+
+This closes the **owner-accepted virtual factory/demo milestone**. The earlier finite-one-order timeout is retained as a separate unresolved test case; the current default-flow pass does not explain or erase it. Further hero-image refinement, strict performance-floor certification, formal audio/accessibility review, durable external archival, and physical commissioning remain future work, not claims of this closure.
