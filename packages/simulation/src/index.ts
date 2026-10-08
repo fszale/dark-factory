@@ -168,6 +168,7 @@ export class FactorySimulation {
         orderedUnits: 0,
         ordersCreated: 0,
         ordersCompleted: 0,
+        ordersCancelled: 0,
         received: 0,
         initial: empty ? 0 : 80,
         consumed: 0,
@@ -424,6 +425,7 @@ export class FactorySimulation {
     quantity: number,
     priority: number,
     source: ProductionOrder["source"],
+    externalRef?: string,
   ) {
     const w = this.state;
     if (w.orders.length >= 20)
@@ -436,6 +438,7 @@ export class FactorySimulation {
       status: "queued",
       createdAt: w.time,
       source,
+      ...(externalRef !== undefined ? { externalRef } : {}),
     };
     w.orders.push(order);
     w.metrics.orderedUnits = (w.metrics.orderedUnits || 0) + quantity;
@@ -1155,6 +1158,7 @@ export class FactorySimulation {
             "parking-route",
             v.id,
             `Following reserved route into parking bay ${v.slot + 1}.`,
+            { orderId: v.orderId },
           );
         } else if (v.phase === "parking") {
           this.event(
@@ -1170,6 +1174,7 @@ export class FactorySimulation {
             "vehicle-parked",
             v.id,
             `Parked in reserved bay ${v.slot + 1}.`,
+            { orderId: v.orderId },
           );
         } else if (v.phase === "parked") {
           if (w.faults.dispatch || !this.canReserveRoad(v.id)) continue;
@@ -1181,6 +1186,7 @@ export class FactorySimulation {
             "dispatch-start",
             v.id,
             "Customer dispatch released; driving to exit.",
+            { orderId: v.orderId },
           );
         } else {
           this.event(
@@ -1208,6 +1214,7 @@ export class FactorySimulation {
             "vehicle-dispatched",
             v.id,
             "Finished robotaxi crossed customer exit boundary.",
+            { orderId: v.orderId },
           );
         }
       }
@@ -1516,7 +1523,7 @@ export class FactorySimulation {
             "reset",
             "factory",
             "New simulation epoch; material ledger reinitialized.",
-            { config: clone(this.state.config) },
+            { config: clone(this.state.config), orders: clone(this.state.orders) },
           );
           message = "Factory reset";
           break;
@@ -1593,6 +1600,59 @@ export class FactorySimulation {
             "manual",
           );
           message = `Created ${order.id}`;
+          break;
+        }
+        case "order-agent-create": {
+          // DF-ORDER-001: issued only by the order desk (never by visitors or providers).
+          const match =
+            typeof c.value === "string" &&
+            /^([1-3]):([2-5]):([a-z0-9][a-z0-9-]{0,39})$/.exec(c.value);
+          if (!match)
+            throw new Error(
+              "Use quantity:priority:externalRef, with 1 to 3 units and priority 2 to 5",
+            );
+          if (c.station)
+            throw new Error("Production orders do not select a station");
+          if (w.orders.some((o) => o.externalRef === match[3]))
+            throw new Error("An active order already uses this external reference");
+          const order = this.createOrder(
+            Number(match[1]),
+            Number(match[2]),
+            "agent",
+            match[3],
+          );
+          message = `Created ${order.id}`;
+          break;
+        }
+        case "order-cancel": {
+          const order =
+            typeof c.value === "string" &&
+            w.orders.find((o) => o.id === c.value);
+          if (!order || c.station)
+            throw new Error("Select an active production order id to cancel");
+          if (
+            order.status !== "queued" ||
+            order.completed > 0 ||
+            this.uncompletedCommitments(order.id) > 0
+          ) {
+            const vehicle = w.vehicles.find((v) => v.orderId === order.id);
+            throw new Error(
+              `Order already committed to assembly${vehicle ? ` (${vehicle.id})` : ""}; cancellation refused`,
+            );
+          }
+          w.orders.splice(w.orders.indexOf(order), 1);
+          // Remaining demand leaves the ledger so orderedUnits - completed still equals open demand.
+          w.metrics.orderedUnits -= order.quantity - order.completed;
+          w.metrics.ordersCancelled = (w.metrics.ordersCancelled || 0) + 1;
+          this.event(
+            "order-cancelled",
+            order.id,
+            `Uncommitted order for ${order.quantity} robotaxis cancelled.`,
+            {
+              order: { ...clone(order), status: "cancelled", cancelledAt: w.time },
+            },
+          );
+          message = `Cancelled ${order.id}`;
           break;
         }
         case "order-priority": {

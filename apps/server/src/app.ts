@@ -1239,6 +1239,9 @@ export async function buildApp(
     const parsed = commandSchema.safeParse(request.body);
     if (!parsed.success)
       return errorReply(reply, 400, "Invalid factory command.");
+    // DF-ORDER-001: only the order desk may inject agent orders, and only on its own floor.
+    if (parsed.data.type === "order-agent-create")
+      return errorReply(reply, 403, "Agent orders are issued only by the order desk.");
     // Any valid operator request supersedes an outstanding autonomous proposal,
     // including a retry or a rejected id collision.
     cancelAdaptiveJob(session, "operator");
