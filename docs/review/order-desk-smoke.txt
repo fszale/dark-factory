@@ -1,0 +1,79 @@
+[smoke +0.0s] phase 1: bundled server with ORDER_DESK_ENABLED unset
+[smoke +0.5s] phase 2: bundled server with ORDER_DESK_ENABLED=true (speed 1, zone zone-local)
+[smoke +1.4s] placed ao-y2ko7758qx; following updates
+[smoke +1.4s] update 1 order.placed -> placed @ sim 0.4s
+[smoke +1.4s] update 2 order.accepted -> accepted @ sim 0.4s
+[smoke +1.4s] update 3 order.scheduled -> scheduled @ sim 0.4s
+[smoke +87.0s] update 4 unit.queue_head -> in_production @ sim 86.0s
+[smoke +130.0s] update 5 unit.committed -> in_production @ sim 129.0s
+[smoke +153.9s] update 6 unit.joined -> quality_check @ sim 153.0s
+[smoke +161.9s] update 7 unit.passed -> completed @ sim 161.0s
+[smoke +161.9s] update 8 order.completed -> completed @ sim 161.0s
+[smoke +173.9s] update 9 unit.staging -> completed @ sim 173.0s
+[smoke +181.8s] update 10 unit.parked -> ready_for_pickup @ sim 180.8s
+[smoke +224.0s] update 11 unit.dispatch_started -> ready_for_pickup @ sim 223.1s
+[smoke +242.0s] update 12 unit.shipped -> shipped @ sim 241.1s
+[smoke +242.0s] update 13 carrier.departed_hub -> in_transit @ sim 241.1s
+[smoke +302.0s] update 14 carrier.arrived_hub -> in_transit @ sim 301.1s
+[smoke +302.0s] update 15 carrier.out_for_delivery -> out_for_delivery @ sim 301.1s
+[smoke +362.1s] update 16 unit.delivered -> delivered @ sim 361.1s
+[smoke +362.1s] update 17 order.delivered -> delivered @ sim 361.1s
+PASS off: /api/order-floor/status says disabled
+PASS off: POST /mcp returns 503
+PASS off: REST /api/agent/v1/catalog returns 503
+PASS off: discovery /mcp/server-card returns 503
+PASS off: /api/order-floor/view returns 503 (no floor)
+PASS off: /api/health still 200
+PASS off: visitor session creation unaffected
+PASS on: floor active
+PASS on: tools/list returns exactly 8 tools with output schemas
+PASS on: catalog and capabilities are virtual and omit the seed
+PASS on: quote is manufacturable with forecast lead options
+PASS on: place_order is idempotent (replayed: true, same id)
+PASS on: a second agent cannot read the order (ORDER_NOT_FOUND)
+PASS on: order delivered within 20 wall minutes
+PASS on: status sequence covers placed through delivered
+PASS on: factory-sourced updates link factory event ids
+PASS on: get_order shows virtual carrier tracking legs
+PASS on: resource subscription delivered notifications/resources/updated
+PASS on: actual ship time equals quoted shipBySimTime (speed 1, no other inputs)
+PASS on: REST mirror returns the same order
+PASS on: REST list without a key is 401
+PASS kill switch: thrown, desk inactive
+PASS kill switch: existing MCP session call blocked
+PASS kill switch: new MCP request 503
+PASS kill switch: REST 503
+PASS kill switch: released, desk active again
+PASS kill switch: calls work again after release
+PASS logs contain no bearer keys or key hashes
+{
+  "passed": 28,
+  "failed": 0,
+  "speed": 1,
+  "zone": "zone-local",
+  "quoteLatencyMs": 239,
+  "quotedShipBySimTime": 241.125,
+  "orderId": "ao-y2ko7758qx",
+  "statuses": [
+    "placed",
+    "accepted",
+    "scheduled",
+    "in_production",
+    "quality_check",
+    "completed",
+    "ready_for_pickup",
+    "shipped",
+    "in_transit",
+    "out_for_delivery",
+    "delivered"
+  ],
+  "wallSecondsToDelivery": 361,
+  "resourceNotifications": 9,
+  "tracking": {
+    "carrier": "Brickworks Virtual Freight",
+    "legs": 2,
+    "etaSimTime": 361.125
+  },
+  "actualShipSimTime": 241.125
+}
+exit=0

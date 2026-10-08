@@ -2,6 +2,21 @@
 
 Date: 2026-09-19. This is a local evidence ledger, not a deployment certificate.
 
+## DF-ORDER-001 virtual order desk (2026-10-08, local only, not deployed)
+
+The order desk on branch `feat/df-order-mcp` is **not deployed**. It is off by default (`ORDER_DESK_ENABLED`, and `.replit` sets it to `false`). No agent key was issued and nothing was listed in an MCP registry. Replit publish requires Filip's yes. Every run below used throwaway keys generated in memory on the local box with Node 22.23.3. Only the keys' SHA-256 hashes reached the server, and server logs were scanned for the keys and hashes.
+
+| Check | Command | Result |
+| --- | --- | --- |
+| Test suite | `npm test` (`vitest run --root .`; locally run as `env -u TYPESAFE_API_KEY npm test` so a box provider key cannot leak into tests) | 29 files, 195 tests (12 new order desk files with 72 tests, plus the 17 prior files with 123 tests). The 17 prior files (123 tests) were unmodified. |
+| Typecheck | `npm run typecheck` | exit 0 |
+| Build | `npm run build` | exit 0. Bundles `dist/server/index.js`, the experiment, replay and forecast workers, and the SPA. |
+| Bundled smoke | `npm run build && node scripts/agent-order-smoke.mjs` (speed 1, `zone-local`, 20-minute limit) | 28 of 28 checks passed (2026-10-08, about 02:19 to 02:25 EDT). Off by default: 7 checks. Enabled: 8 tools; catalog and capabilities without the seed; a quote in 239 ms; place plus idempotent replay; cross-agent read refused; every status placed through delivered in 361 wall seconds; factory event links; tracking with 2 legs; 9 resource notifications; actual ship 241.125 s equal to the quoted 241.125 s; REST parity and 401. Kill switch: existing and new MCP calls and REST blocked, then restored after release. No keys or hashes in logs. Log: [order-desk-smoke.txt](review/order-desk-smoke.txt) |
+| Desk soak | `SOAK_SECONDS=1800 node scripts/agent-order-soak.mjs` | passed (2026-10-08, about 01:48 to 02:18 EDT). 31 samples over 1800 wall seconds and 1800 floor-simulated seconds. 10 virtual orders placed and 0 refused; 7 delivered, 3 active, 0 failed; mean quoted ship 195.2 s against actual 203.3 s; on-time share 0.889. Floor material, receiving and ledger deltas were 0 in every sample. Floor events peaked at 1,013 (bound 2,000) and the desk update log at 236. The floor viewer received 14,365 snapshot and 1,788 orders frames with 0 errors. Heap 31.6 to 52.3 MB, RSS 119.4 to 164.5 MB. The concurrent visitor-session soak (`scripts/soak.mjs`, speed 10) passed 31 samples with 403 completed, 400 dispatched, 0 material delta and 0 stream errors. Evidence: [order-desk-soak.json](review/order-desk-soak.json), [order-desk-soak-session.json](review/order-desk-soak-session.json) |
+| Browser check | `docs/review/order-desk/browser-check.mjs` | 10 screenshots, no console errors, no secrets in logs. See [review notes](review/order-desk/README.md). |
+
+Not covered: published-URL acceptance, a manual mid-production restart of `npm start` (covered in-process by tests), the optional 3D order tag and carrier cue, and comparing floor CPU against the corrected soak. `tickProcessingMs` covers visitor sessions only.
+
 ## Passed local evidence
 
 - The final source snapshot passed `npm run typecheck` and **107 tests across 12 files**. The suite covers process-wide provider concurrency, command-ID collisions (including imported checkpoints), invalid provider output, large bounded checkpoint import, nonduplicated archive starts, decision aftermath, shared runtime response schemas, monotonic live-stream sequencing, station-specific pause/resume, defect instrumentation, deterministic and adaptive paired experiments, adaptive job isolation, and cancellation on takeover, explicit cancel, and session expiry.
