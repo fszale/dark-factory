@@ -4,7 +4,7 @@ Status: **proposed spec**. Not implemented in the simulation. No external servic
 Date: 2026-10-08
 Repo: [fszale/dark-factory](https://github.com/fszale/dark-factory) (Brickworks)
 ID: `DF-SHOP-001`
-Related: [Joint Design Loop, DF-LOOP-001](spacex-design-loop.md), [station adapter boundary](../station-adapters.md), [people tracker: Caleb Chamberlain, OSH Cut](../people/oshbuilt-caleb-osh-cut.md)
+Related: [Vehicle Order MCP, DF-ORDER-001](vehicle-order-mcp.md) (seller-side counterpart), [Joint Design Loop, DF-LOOP-001](spacex-design-loop.md), [station adapter boundary](../station-adapters.md), [people tracker: Caleb Chamberlain, OSH Cut](../people/oshbuilt-caleb-osh-cut.md)
 
 This document adds a sourcing building block to the dark factory: every shop is an endpoint that tells an agent, in machine-readable form, what it can make, whether a specific part is manufacturable, what it costs, and when it ships. Brickworks design agents source against that endpoint instead of against a broker or a human estimator.
 
@@ -32,8 +32,12 @@ Full notes, quotes, and counterpoints are in the [people tracker](../people/oshb
 | OSH Cut MCP server | **Test only** | Demos: swingset (about 5 minutes), brontosaurus (30 minutes), firepit housing. Publication announced "within a week" on 2026-10-07. |
 | A standard shop MCP schema across shops | **Does not exist** | Nobody has published one that we found. The sketch below is our draft, not a standard. |
 | Brickworks as a buyer of shop parts | **Proposed** | This spec. |
-| Brickworks as a shop that exposes its own MCP | **Proposed, later** | Out of scope until there is a physical plant. |
+| Brickworks as a shop that exposes its own MCP | **Proposed, virtual only** | Seller-side counterpart spec: [DF-ORDER-001](vehicle-order-mcp.md). Virtual orders against the simulated factory; no payments or shipping. A real-plant seller endpoint stays out of scope until there is a physical plant. |
 | Outcome history (did the shop deliver what it declared) | **Open problem** | Raised on the thread; Caleb: "I wonder where that kind of performance history could live." |
+
+## Seller-side counterpart
+
+This spec covers Brickworks as a buyer. [DF-ORDER-001, Vehicle Order MCP](vehicle-order-mcp.md) covers the other direction: the dark factory exposes its own MCP server so outside agents can quote, order, and track the vehicle being manufactured, all virtual. The two specs share the feasibility issue shape, the idempotency rules, and the "few tools" ceiling, so an agent that learns one side can read the other.
 
 ## Why it is a dark factory building block
 

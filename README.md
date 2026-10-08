@@ -75,6 +75,7 @@ These are proposals and notes, not implemented features.
 
 - [Joint design loop (DF-LOOP-001)](docs/plans/spacex-design-loop.md): delete and simplify product and factory work together before anything is automated.
 - [Shop-as-MCP sourcing (DF-SHOP-001)](docs/plans/shop-mcp-sourcing.md): design agents check DFM, price and lead time directly against a shop's API, then stop for a human to approve any purchase. Includes a draft tool schema and a mock reference shop experiment.
+- [Vehicle Order MCP (DF-ORDER-001)](docs/plans/vehicle-order-mcp.md): the seller-side counterpart to DF-SHOP-001. The factory exposes its own MCP server so outside AI agents can browse the vehicle catalog, get a feasibility check, virtual price and simulated lead time, place a virtual order, and track it through the simulated stations and a virtual delivery leg. No money, no shipping, no personal data.
 - [People we track](docs/people/README.md): builders whose public work shapes the plan, starting with [Caleb Chamberlain of OSH Cut](docs/people/oshbuilt-caleb-osh-cut.md) and his "every shop is an API endpoint" thesis.
 
 ## Build with us
