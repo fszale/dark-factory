@@ -1,23 +1,27 @@
-2026-10-08T05:37:56.423Z floor banner: "Shared order floor, read-only. Agent orders run here."; control dock inert without code: true
-2026-10-08T05:38:00.166Z screenshot 01-floor-read-only.png: floor view with read-only banner, controls dimmed and inert, no agent orders yet
-2026-10-08T05:38:00.519Z placed ao-2bgjiz6ru5 via REST with a throwaway local key (quote 200, order 200)
-2026-10-08T05:38:00.553Z toast: "New agent order ao-2bgjiz6ru5 from Test Agent: 1 robotaxi, expedite, zone-metro."
-2026-10-08T05:38:03.218Z screenshot 02-incoming-order-toast.png: toast and feed row for the incoming agent order plus its card
-2026-10-08T05:38:06.826Z projected chips visible before commitment: 5
-2026-10-08T05:38:11.206Z screenshot 03-projected-chips.png: unit detail before commitment: dashed projected station chips
-2026-10-08T05:38:24.328Z bound chips after commitment: 5
-2026-10-08T05:38:29.747Z screenshot 04-bound-chips.png: unit committed: solid bound chips with module id and lot
-2026-10-08T05:38:35.151Z clicked vehicle taxi-1; inspector shows agent order row: true; follow button: 1
-2026-10-08T05:38:37.443Z screenshot 05-inspector-link.png: vehicle selected in the Inspector with the Agent order row and Follow vehicle
-2026-10-08T05:38:37.448Z operator speed 10: {"ok":true,"message":"Applied","revision":3}
-2026-10-08T05:38:50.810Z tracking strip visible: 1
-2026-10-08T05:38:56.216Z screenshot 06-tracking-strip.png: virtual carrier tracking strip with legs and ETA while in transit
-2026-10-08T05:39:20.089Z card status text: "delivered"
-2026-10-08T05:39:25.259Z screenshot 07-delivered.png: order delivered; stepper complete; recent updates with factory event ids
-2026-10-08T05:39:30.392Z screenshot 08-metrics-agent-orders.png: Metrics drawer Agent orders group, labeled simulated
-2026-10-08T05:39:39.362Z after entering the operator code, control dock inert: false
-2026-10-08T05:39:42.596Z screenshot 09-operator-unlocked.png: operator code accepted: controls enabled, ribbon notes operator controls
-2026-10-08T05:39:46.913Z after leaving the floor, banner count: 0
-2026-10-08T05:39:51.514Z screenshot 10-this-session.png: back on the visitor session: This session order list with cancel for queued orders
-2026-10-08T05:39:51.514Z console errors: none
-2026-10-08T05:39:51.514Z server log contains key or code: false
+2026-10-08T08:43:45.686Z floor banner: "Shared order floor, read-only. Agent orders run here."; control dock inert without code: true
+2026-10-08T08:43:50.475Z screenshot 01-floor-read-only.png: floor view with read-only banner, controls dimmed and inert, no agent orders yet
+2026-10-08T08:43:50.875Z placed ao-7i3chnj5cs via REST with a throwaway local key (quote 200, order 200)
+2026-10-08T08:43:52.208Z toast at first sight: toast visible, box {"x":1224,"y":894,"width":360,"height":50} inside 1600x1000, opacity 1, on top: true, text "New agent order ao-7i3chnj5cs from Test Agent: 1 robotaxi, expedite, zone-metro."
+2026-10-08T08:43:58.627Z screenshot 02-incoming-order-toast.png: incoming agent order toast on screen (bottom right) with the matching feed row and card
+2026-10-08T08:44:03.702Z projected chips visible before commitment: 5
+2026-10-08T08:44:07.815Z screenshot 03-projected-chips.png: unit detail before commitment: dashed projected station chips
+2026-10-08T08:44:15.276Z screenshot 02b-incoming-order-toast-detail.png: close-up of the toast while it is up
+2026-10-08T08:44:15.290Z toast still up after the projected-chips screenshot: toast visible, box {"x":1224,"y":886,"width":360,"height":50} inside 1600x1000, opacity 1, on top: true, text "New agent order ao-7i3chnj5cs from Test Agent: 1 robotaxi, expedite, zone-metro."
+2026-10-08T08:44:15.305Z toast still up 23.1 s after it appeared: toast visible, box {"x":1224,"y":886,"width":360,"height":50} inside 1600x1000, opacity 1, on top: true, text "New agent order ao-7i3chnj5cs from Test Agent: 1 robotaxi, expedite, zone-metro."
+2026-10-08T08:44:23.693Z toast dismissed itself after 31.5 wall s (countdown runs on painted frames)
+2026-10-08T08:44:25.208Z bound chips after commitment: 5
+2026-10-08T08:44:32.284Z screenshot 04-bound-chips.png: unit committed: solid bound chips with module id and lot
+2026-10-08T08:44:39.333Z clicked vehicle taxi-1; inspector shows agent order row: true; follow button: 1
+2026-10-08T08:44:42.083Z screenshot 05-inspector-link.png: vehicle selected in the Inspector with the Agent order row and Follow vehicle
+2026-10-08T08:44:42.090Z operator speed 10: {"ok":true,"message":"Applied","revision":3}
+2026-10-08T08:45:01.619Z tracking strip visible: 1
+2026-10-08T08:45:11.066Z screenshot 06-tracking-strip.png: virtual carrier tracking strip with legs and ETA while in transit
+2026-10-08T08:45:25.723Z card status text: "delivered"
+2026-10-08T08:45:31.373Z screenshot 07-delivered.png: order delivered; stepper complete; recent updates with factory event ids
+2026-10-08T08:45:37.414Z screenshot 08-metrics-agent-orders.png: Metrics drawer Agent orders group, labeled simulated
+2026-10-08T08:45:45.640Z after entering the operator code, control dock inert: false
+2026-10-08T08:45:50.318Z screenshot 09-operator-unlocked.png: operator code accepted: controls enabled, ribbon notes operator controls
+2026-10-08T08:45:54.102Z after leaving the floor, banner count: 0
+2026-10-08T08:46:01.930Z screenshot 10-this-session.png: back on the visitor session: This session order list with cancel for queued orders
+2026-10-08T08:46:01.930Z console errors: none
+2026-10-08T08:46:01.930Z server log contains key or code: false

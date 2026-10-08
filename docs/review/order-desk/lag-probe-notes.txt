@@ -1,0 +1,15 @@
+2026-10-08T08:53:31.026Z speed 10: {"ok":true,"message":"Applied","revision":2}
+2026-10-08T08:53:31.196Z minute 1: placed order status 200
+2026-10-08T08:54:34.495Z minute 1: server floor sim 622.3 s; UI header clock 621 s (behind 1.3 s); UI desk floor time 621 s (behind 1.3 s); rAF 1.0 fps
+2026-10-08T08:55:37.629Z minute 2: server floor sim 1254.8 s; UI header clock 1253 s (behind 1.8 s); UI desk floor time 1252 s (behind 2.8 s); rAF 1.0 fps
+2026-10-08T08:56:41.430Z minute 3: server floor sim 1886.0 s; UI header clock 1884 s (behind 2.0 s); UI desk floor time 1877 s (behind 9.0 s); rAF 1.0 fps
+2026-10-08T08:56:41.663Z minute 4: placed order status 200
+2026-10-08T08:57:48.602Z minute 4: server floor sim 2526.0 s; UI header clock 2521 s (behind 5.0 s); UI desk floor time 2516 s (behind 10.0 s); rAF 1.0 fps
+2026-10-08T08:58:51.641Z minute 5: server floor sim 3196.0 s; UI header clock 3196 s (behind 0.0 s); UI desk floor time 3187 s (behind 9.0 s); rAF 1.0 fps
+2026-10-08T08:59:57.534Z minute 6: server floor sim 3826.0 s; UI header clock 3824 s (behind 2.0 s); UI desk floor time 3821 s (behind 5.0 s); rAF 1.0 fps
+2026-10-08T08:59:57.798Z minute 7: placed order status 200
+2026-10-08T09:01:04.331Z minute 7: server floor sim 4487.3 s; UI header clock 4486 s (behind 1.3 s); UI desk floor time 4480 s (behind 7.3 s); rAF 1.0 fps
+2026-10-08T09:02:08.560Z minute 8: server floor sim 5153.5 s; UI header clock 5152 s (behind 1.5 s); UI desk floor time 5149 s (behind 4.5 s); rAF 1.3 fps
+2026-10-08T09:03:12.643Z minute 9: server floor sim 5794.8 s; UI header clock 5794 s (behind 0.8 s); UI desk floor time 5790 s (behind 4.8 s); rAF 1.0 fps
+2026-10-08T09:03:12.925Z minute 10: placed order status 200
+2026-10-08T09:04:16.257Z minute 10: server floor sim 6438.5 s; UI header clock 6438 s (behind 0.5 s); UI desk floor time 6435 s (behind 3.5 s); rAF 1.0 fps
