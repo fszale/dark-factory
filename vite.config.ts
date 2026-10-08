@@ -17,6 +17,12 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    proxy: { "/api": { target: "http://127.0.0.1:3000", ws: true } },
+    proxy: {
+      "/api": { target: "http://127.0.0.1:3000", ws: true },
+      // DF-ORDER-001 order desk transport and discovery paths.
+      "/mcp": { target: "http://127.0.0.1:3000" },
+      "/llms.txt": { target: "http://127.0.0.1:3000" },
+      "/.well-known": { target: "http://127.0.0.1:3000" },
+    },
   },
 });

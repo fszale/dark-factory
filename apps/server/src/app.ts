@@ -67,6 +67,8 @@ import {
   type ProviderSet,
 } from "../../../packages/providers/src/index.ts";
 import { ArchiveCapacityError, ArchiveStore } from "./archive.ts";
+import { registerOrderDesk, type OrderDeskOptions } from "./order-desk/index.ts";
+import { FLOOR_SESSION_ID } from "./order-desk/floor.ts";
 
 const createSessionSchema = z
   .object({
@@ -200,6 +202,10 @@ export interface BuildAppOptions {
   archiveSessionBytes?: number;
   archiveGlobalBytes?: number;
   logger?: boolean;
+  /** DF-ORDER-001 order desk. Off unless enabled here or by ORDER_DESK_ENABLED=true. */
+  orderDesk?: OrderDeskOptions;
+  /** Honor X-Forwarded-For (Replit proxy) so per-IP limits see the real client. Env TRUST_PROXY=true. */
+  trustProxy?: boolean;
 }
 
 function secretMatches(
@@ -393,7 +399,11 @@ function runReplay(path: string, time: number) {
 export async function buildApp(
   options: BuildAppOptions = {},
 ): Promise<FastifyInstance> {
-  const app = Fastify({ logger: options.logger ?? false });
+  const app = Fastify({
+    // Bearer keys and access codes never reach logs.
+    logger: options.logger ? { redact: ["req.headers.authorization", "req.headers[\"x-access-code\"]"] } : false,
+    trustProxy: options.trustProxy ?? process.env.TRUST_PROXY === "true",
+  });
   const providers: ProviderSet = createProviderSet(options.providers);
   const publicMode = options.publicMode ?? process.env.PUBLIC_MODE === "true";
   const accessCode =
@@ -1645,15 +1655,47 @@ export async function buildApp(
     return session.liveMessage!.payload;
   }
 
+  const orderDesk = registerOrderDesk(app, options.orderDesk, {
+    allows: (code) => (accessCode ? secretMatches(code, accessCode) : !publicMode),
+  });
+
   app.get("/api/live", { websocket: true }, (socket) => {
     let session: Session | null = null;
     let lastSequence = -1;
+    let floorViewer = false;
+    let floorSequence = 0;
+    let floorRevisionSent = "";
+    let floorDeskSentAt = 0;
+    let stopFloor: (() => void) | null = null;
+    /** DF-ORDER-001: read-only shared order floor frames (snapshot every change, desk at most once per second). */
+    const sendFloor = (force = false) => {
+      if (!orderDesk.active() || socket.readyState !== socket.OPEN || socket.bufferedAmount >= 512_000) return;
+      const floor = orderDesk.floor();
+      const status = floor.sim.status();
+      const key = `${status.epoch}:${status.lastEventId}:${status.time}`;
+      if (force || key !== floorRevisionSent) {
+        floorRevisionSent = key;
+        socket.send(JSON.stringify({ type: "snapshot", sessionId: FLOOR_SESSION_ID, sequence: ++floorSequence, sentAt: Date.now(), snapshot: floor.sim.liveSnapshot() }));
+      }
+      if (force || Date.now() - floorDeskSentAt >= 1000) {
+        floorDeskSentAt = Date.now();
+        socket.send(JSON.stringify({ type: "orders", sessionId: FLOOR_SESSION_ID, sequence: ++floorSequence, sentAt: Date.now(), desk: floor.desk.deskView() }));
+      }
+    };
     const authTimer = setTimeout(
       () => socket.close(1008, "Authentication required"),
       5000,
     );
     authTimer.unref();
     const snapshotTimer = setInterval(() => {
+      if (floorViewer) {
+        try {
+          sendFloor();
+        } catch {
+          socket.close(1011, "Order floor unavailable");
+        }
+        return;
+      }
       if (
         session &&
         session.liveSequence > lastSequence &&
@@ -1666,12 +1708,23 @@ export async function buildApp(
     }, tickMs);
     snapshotTimer.unref();
     socket.on("message", (raw) => {
-      if (session) return;
+      if (session || floorViewer) return;
       try {
+        const parsed = JSON.parse(raw.toString()) as Record<string, unknown>;
+        if (parsed && parsed.view === "order-floor") {
+          const request = z.object({ view: z.literal("order-floor"), accessCode: z.string().max(256).optional() }).strict().parse(parsed);
+          const allowed = orderDesk.config.publicView || (accessCode ? secretMatches(request.accessCode, accessCode) : !publicMode);
+          if (!orderDesk.active() || !allowed) throw new Error("floor view unavailable");
+          floorViewer = true;
+          clearTimeout(authTimer);
+          stopFloor = orderDesk.onDisable(() => socket.close(1013, "Order desk disabled"));
+          sendFloor(true);
+          return;
+        }
         const auth = z
           .object({ id: z.string().uuid(), token: z.string().min(1) })
           .strict()
-          .parse(JSON.parse(raw.toString()));
+          .parse(parsed);
         const candidate = sessions.get(auth.id);
         if (!candidate || !secretMatches(auth.token, candidate.token))
           throw new Error("invalid");
@@ -1688,6 +1741,7 @@ export async function buildApp(
     socket.on("close", () => {
       clearTimeout(authTimer);
       clearInterval(snapshotTimer);
+      stopFloor?.();
       if (session) session.clients = Math.max(0, session.clients - 1);
     });
   });

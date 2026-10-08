@@ -552,12 +552,12 @@ export class OrderDesk {
     const snapshot = floor.snapshot();
     if (snapshot.epoch !== quote.epoch)
       throw new OrderDeskError("QUOTE_EXPIRED", "The order floor changed epoch since this quote; request a new quote.");
+    if (this.state.intakePaused)
+      throw new OrderDeskError("ORDER_DESK_PAUSED", "The operator has paused order intake.", true, { retryAfterSeconds: 60 });
     if (!quote.manufacturable || !quote.zone)
       throw new OrderDeskError("QUOTE_INFEASIBLE", "This quote is not manufacturable.", false, { issues: quote.issues });
     const lead = quote.leadOptions.find((option) => option.name === input.leadOption);
     if (!lead) throw new OrderDeskError("VALIDATION_FAILED", `Lead option ${input.leadOption} was not quoted; quote it first.`);
-    if (this.state.intakePaused)
-      throw new OrderDeskError("ORDER_DESK_PAUSED", "The operator has paused order intake.", true, { retryAfterSeconds: 60 });
     // Placement re-runs feasibility; it does not re-price.
     const errors = checkFeasibility({
       config: { modelId: quote.config.modelId, options: quote.config.options },
@@ -1255,6 +1255,11 @@ export class OrderDesk {
       if (orderId ? u.orderId === orderId : this.state.orders[u.orderId]?.agentId === agent.id) return true;
     }
     return false;
+  }
+
+  /** The newest retained updates of one order, oldest first (resource reads; caller checks ownership). */
+  recentUpdates(orderId: string, limit: number) {
+    return structuredClone(this.state.updates.filter((u) => u.orderId === orderId).slice(-limit));
   }
 
   /** Every retained update after a sequence number, regardless of agent (operator and archive use). */

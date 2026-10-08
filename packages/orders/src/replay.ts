@@ -1,6 +1,6 @@
 import type { FactorySnapshot } from "../../contracts/src/index.ts";
 import type { AuditEntry } from "../../simulation/src/index.ts";
-import { OrderDesk, type DeskArchiveRecord, type DeskOptions } from "./desk.ts";
+import { OrderDesk, type DeskArchiveRecord, type DeskOptions, type DeskState } from "./desk.ts";
 
 export type FloorArchiveItem = AuditEntry | DeskArchiveRecord;
 
@@ -16,11 +16,11 @@ export const isDeskRecord = (item: FloorArchiveItem): item is DeskArchiveRecord 
 export function rebuildDesk(
   checkpoint: FactorySnapshot,
   items: Iterable<FloorArchiveItem>,
-  options: Pick<DeskOptions, "now" | "deliveryTimeScale" | "maxActiveAgentOrders"> & { seed: number; endSimTime?: number },
+  options: Pick<DeskOptions, "now" | "deliveryTimeScale" | "maxActiveAgentOrders"> & { seed: number; endSimTime?: number; deskState?: DeskState },
 ) {
   const desk = new OrderDesk(
     { floor: null, now: options.now, deliveryTimeScale: options.deliveryTimeScale, maxActiveAgentOrders: options.maxActiveAgentOrders },
-    OrderDesk.initialState(checkpoint),
+    options.deskState ?? OrderDesk.initialState(checkpoint),
   );
   desk.carrierSeed = options.seed;
   let last = checkpoint.time;
