@@ -3,6 +3,8 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { ResourceUpdatedNotificationSchema } from "@modelcontextprotocol/sdk/types.js";
 import { ORDER_TOOL_NAMES, orderView, quoteVehicleOutput, type OrderUpdate } from "../packages/contracts/src/orders.ts";
+import { readFileSync } from "node:fs";
+import { agentOrderScenarioSchema, runAgentOrderScenario } from "./helpers/agent-order-scenario.ts";
 import { rebuildFromFloorArchive } from "./helpers/floor-archive.ts";
 import { orderApp } from "./helpers/order-server.ts";
 
@@ -123,4 +125,36 @@ describe("DF-ORDER-001 MCP end to end (task 12)", () => {
       await app.close();
     }
   }, 120_000);
+});
+
+describe("DF-ORDER-001 agent-order scenarios over MCP (task 18)", () => {
+  const file = (name: string) => new URL(`../scenarios/agent-orders/${name}`, import.meta.url).pathname;
+
+  it("standard-delivery: delivered with ship time equal to the quote", async () => {
+    const report = await runAgentOrderScenario(file("standard-delivery.json"));
+    expect(report.failures, JSON.stringify(report)).toEqual([]);
+    expect(report.actualShipSimTime).toBe(report.quotedShipBySimTime);
+  }, 120_000);
+
+  it("assembly-outage-delay: at risk, estimate revised, risk cleared after repair, delivered", async () => {
+    const report = await runAgentOrderScenario(file("assembly-outage-delay.json"));
+    expect(report.failures, JSON.stringify(report)).toEqual([]);
+    const types = report.updateTypes;
+    expect(types.indexOf("order.at_risk")).toBeLessThan(types.indexOf("order.risk_cleared"));
+    expect(report.finalStatus).toBe("delivered");
+  }, 120_000);
+
+  it("cancel-before-commit: cancelled while scheduled, engine counts it, ledger intact", async () => {
+    const report = await runAgentOrderScenario(file("cancel-before-commit.json"));
+    expect(report.failures, JSON.stringify(report)).toEqual([]);
+    expect(report.ordersCancelled).toBeGreaterThanOrEqual(1);
+    expect(report.conservation).toEqual({ material: 0, ledger: 0 });
+  }, 120_000);
+
+  it("rejects malformed scenario files", () => {
+    expect(() => agentOrderScenarioSchema.parse({ kind: "brickworks-agent-order-scenario", version: 1, floor: { scenario: "balanced", seed: 42 }, agents: [], steps: [], expect: {} })).toThrow();
+    const base = JSON.parse(readFileSync(file("standard-delivery.json"), "utf8"));
+    expect(() => agentOrderScenarioSchema.parse({ ...base, steps: [{ ...base.steps[0], agent: "ghost" }] })).toThrow();
+    expect(() => agentOrderScenarioSchema.parse({ ...base, payment: { card: "1" } })).toThrow();
+  });
 });

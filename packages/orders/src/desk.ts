@@ -198,6 +198,8 @@ export interface DeskState {
   intakePaused: boolean;
   prunedTerminal: number;
   reforecastPending: boolean;
+  /** A risk was raised or cleared: re-forecast on the next step, skipping the wall-clock throttle. */
+  reforecastUrgent?: boolean;
   lastReforecastAt: number;
   simTime: number;
 }
@@ -749,6 +751,7 @@ export class OrderDesk {
     if (signal.type === "RISK_RAISED" || signal.type === "RISK_CLEARED") {
       this.refreshRisk(time, fe, signal.type === "RISK_RAISED" ? signal.reason : null);
       this.state.reforecastPending = true;
+      this.state.reforecastUrgent = true;
       return;
     }
     if (signal.type === "FLOOR_RESET") {
@@ -1007,7 +1010,7 @@ export class OrderDesk {
       !this.reforecastInFlight &&
       this.options.forecaster !== undefined &&
       this.options.floor !== null &&
-      this.options.now() - this.state.lastReforecastAt >= this.options.reforecastIntervalMs &&
+      (this.state.reforecastUrgent === true || this.options.now() - this.state.lastReforecastAt >= this.options.reforecastIntervalMs) &&
       this.forecastable().length > 0
     );
   }
@@ -1019,6 +1022,7 @@ export class OrderDesk {
     const floor = this.floor();
     const orders = this.forecastable();
     this.state.reforecastPending = false;
+    this.state.reforecastUrgent = false;
     this.state.lastReforecastAt = this.options.now();
     if (!orders.length) return 0;
     this.reforecastInFlight = true;

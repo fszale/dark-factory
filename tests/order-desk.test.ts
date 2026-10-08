@@ -287,3 +287,27 @@ describe("order desk end to end on a real floor", () => {
     expect(second.live).toBe(first.live);
   }, 120_000);
 });
+
+describe("re-forecast throttle", () => {
+  it("throttles routine triggers by wall time but re-forecasts at once when a risk is raised or cleared", async () => {
+    const h = createHarness({ reforecastIntervalMs: 30_000 });
+    h.tick(10);
+    const quote = await h.desk.quote(agentA, quoteInput(1));
+    h.desk.placeOrder(agentA, { quoteId: quote.quoteId, leadOption: "standard", idempotencyKey: "throttle-0001" });
+    expect(h.desk.needsReforecast()).toBe(true);
+    await h.desk.reforecast();
+    // A routine trigger (a second order) waits out the 30 s wall throttle.
+    const second = await h.desk.quote(agentB, quoteInput(1));
+    h.desk.placeOrder(agentB, { quoteId: second.quoteId, leadOption: "standard", idempotencyKey: "throttle-0002" });
+    expect(h.desk.needsReforecast()).toBe(false);
+    // A site fault raises a risk: the re-forecast is due immediately and reports the change.
+    h.sim.command({ id: "fault-assembly", type: "fault", value: "assembly" });
+    h.tick(1);
+    expect(h.desk.needsReforecast()).toBe(true);
+    expect(await h.desk.reforecast()).toBeGreaterThan(0);
+    expect(h.desk.needsReforecast()).toBe(false);
+    h.sim.command({ id: "repair-site", type: "repair" });
+    h.tick(1);
+    expect(h.desk.needsReforecast()).toBe(true);
+  });
+});
