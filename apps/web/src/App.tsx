@@ -35,12 +35,14 @@ import { FactoryWorld } from "./world.ts";
 import { FactoryAudio } from "./audio.ts";
 import { AdaptiveComparisonPanel } from "./AdaptiveComparisonPanel.tsx";
 import { OrdersPanel } from "./OrdersPanel.tsx";
+import { OrderToast } from "./OrderToast.tsx";
 import {
   FLOOR_SESSION_ID,
   agentOrderForVehicle,
   arrivals,
+  createFrameBatcher,
   newOrderMessage,
-  parseLiveFrame,
+  reduceLiveBatch,
 } from "./orderFloor.ts";
 import type { OrderDeskView } from "../../../packages/contracts/src/orders.ts";
 import {
@@ -529,7 +531,7 @@ function App() {
   const floorTimer = useRef<number | null>(null);
   const sessionSnapshot = useRef<FactorySnapshot | null>(null);
   const floorDeskRef = useRef<OrderDeskView | null>(null);
-  const toastTimer = useRef<number | null>(null);
+  const toastSeq = useRef(0);
   const [floorView, setFloorView] = useState(false);
   const [floorDesk, setFloorDesk] = useState<OrderDeskView | null>(null);
   const [floorStatus, setFloorStatus] = useState({
@@ -539,7 +541,7 @@ function App() {
   });
   const [floorOperator, setFloorOperator] = useState(false);
   const [floorFeed, setFloorFeed] = useState<string[]>([]);
-  const [toast, setToast] = useState("");
+  const [toast, setToast] = useState<{ id: number; text: string } | null>(null);
 
   const connectSocket = useCallback((next: Session) => {
     sessionRef.current = next;
@@ -561,36 +563,36 @@ function App() {
       setNotice("Live session connected");
     };
     let lastSequence = -1;
-    ws.onmessage = (event) => {
+    // Frames are batched per task: every frame is validated, only the newest is rendered, so a
+    // burst queued behind a slow 3D frame costs one React render (see createFrameBatcher).
+    const batcher = createFrameBatcher<string>((raws) => {
       if (socket.current !== ws) return;
-      try {
-        const validationStart = performance.now();
-        const message = parseLiveFrame(event.data);
-        if (
-          message.type !== "snapshot" ||
-          message.sessionId !== next.id ||
-          message.sequence <= lastSequence
-        )
-          return;
-        lastSequence = message.sequence;
-        setClientMetrics((current) => ({
-          ...current,
-          streamLag: message.sentAt
-            ? Math.max(0, Date.now() - message.sentAt)
-            : 0,
-          validationMs: performance.now() - validationStart,
-        }));
-        sessionSnapshot.current = message.snapshot as FactorySnapshot;
-        if (!floorRef.current) setSnapshot(message.snapshot as FactorySnapshot);
-      } catch {
-        setClientMetrics((current) => ({
-          ...current,
-          invalidFrames: current.invalidFrames + 1,
-        }));
+      const validationStart = performance.now();
+      const batch = reduceLiveBatch(raws, next.id, lastSequence);
+      lastSequence = batch.lastSequence;
+      const validationMs = (performance.now() - validationStart) / raws.length;
+      const message = batch.snapshot;
+      setClientMetrics((current) => ({
+        ...current,
+        invalidFrames: current.invalidFrames + batch.rejected,
+        ...(message
+          ? {
+              streamLag: message.sentAt ? Math.max(0, Date.now() - message.sentAt) : 0,
+              validationMs,
+            }
+          : {}),
+      }));
+      if (batch.rejected)
         setError(
           "An invalid live update was rejected; showing the last verified state.",
         );
-      }
+      if (!message) return;
+      sessionSnapshot.current = message.snapshot as FactorySnapshot;
+      if (!floorRef.current) setSnapshot(message.snapshot as FactorySnapshot);
+    });
+    ws.onmessage = (event) => {
+      if (socket.current !== ws) return;
+      batcher.push(String(event.data));
     };
     ws.onclose = (event) => {
       if (!mounted.current || socket.current !== ws || !sessionRef.current)
@@ -963,40 +965,38 @@ function App() {
         );
         setNotice("Watching the shared order floor (read-only)");
       };
-      ws.onmessage = (event) => {
+      // Same batching as the session stream: validate every frame, render only the newest
+      // snapshot and the newest desk. Arrivals diff against the last rendered desk, so none are lost.
+      const batcher = createFrameBatcher<string>((raws) => {
         if (floorSocket.current !== ws || !floorRef.current) return;
-        try {
-          const message = parseLiveFrame(event.data);
-          if (
-            message.sessionId !== FLOOR_SESSION_ID ||
-            message.sequence <= lastSequence
-          )
-            return;
-          lastSequence = message.sequence;
-          if (message.type === "snapshot") {
-            setSnapshot(message.snapshot as FactorySnapshot);
-            return;
-          }
-          const fresh = arrivals(floorDeskRef.current, message.desk);
-          floorDeskRef.current = message.desk;
-          setFloorDesk(message.desk);
-          if (fresh.length) {
-            const lines = fresh.map(newOrderMessage);
-            setFloorFeed((current) => [...lines.reverse(), ...current].slice(0, 20));
-            setToast(lines[0]);
-            if (toastTimer.current) window.clearTimeout(toastTimer.current);
-            toastTimer.current = window.setTimeout(() => setToast(""), 6000);
-          }
-        } catch {
+        const batch = reduceLiveBatch(raws, FLOOR_SESSION_ID, lastSequence);
+        lastSequence = batch.lastSequence;
+        if (batch.rejected) {
           // A malformed floor frame is dropped; the last verified state stays on screen.
           setClientMetrics((current) => ({
             ...current,
-            invalidFrames: current.invalidFrames + 1,
+            invalidFrames: current.invalidFrames + batch.rejected,
           }));
           setError(
             "An invalid order floor update was rejected; showing the last verified state.",
           );
         }
+        if (batch.snapshot) setSnapshot(batch.snapshot.snapshot as FactorySnapshot);
+        if (!batch.orders) return;
+        const desk = batch.orders.desk;
+        const fresh = arrivals(floorDeskRef.current, desk);
+        floorDeskRef.current = desk;
+        setFloorDesk(desk);
+        if (fresh.length) {
+          const lines = fresh.map(newOrderMessage).reverse();
+          setFloorFeed((current) => [...lines, ...current].slice(0, 20));
+          toastSeq.current += 1;
+          setToast({ id: toastSeq.current, text: lines[0] });
+        }
+      });
+      ws.onmessage = (event) => {
+        if (floorSocket.current !== ws || !floorRef.current) return;
+        batcher.push(String(event.data));
       };
       ws.onclose = (event) => {
         if (floorSocket.current !== ws || !floorRef.current || !mounted.current)
@@ -1020,7 +1020,6 @@ function App() {
   useEffect(
     () => () => {
       if (floorTimer.current) window.clearTimeout(floorTimer.current);
-      if (toastTimer.current) window.clearTimeout(toastTimer.current);
       if (floorSocket.current) {
         floorSocket.current.onclose = null;
         floorSocket.current.close();
@@ -3099,17 +3098,16 @@ function App() {
       )}
 
       {toast && (
-        <div className="order-toast glass" role="status" aria-live="polite">
-          <button
-            onClick={() => {
-              setToast("");
-              setPanel("orders");
-              setPanelOpen(true);
-            }}
-          >
-            {toast}
-          </button>
-        </div>
+        <OrderToast
+          key={toast.id}
+          message={toast.text}
+          onOpen={() => {
+            setToast(null);
+            setPanel("orders");
+            setPanelOpen(true);
+          }}
+          onDone={() => setToast((current) => (current?.id === toast.id ? null : current))}
+        />
       )}
       {floorView && (
         <div className="floor-ribbon" role="status">

@@ -1378,6 +1378,7 @@ button:disabled {
   z-index: 40;
   max-width: 360px;
   border-radius: 6px;
+  opacity: 1;
   animation: order-toast-in 0.25s ease-out;
 }
 .order-toast button {
@@ -1388,14 +1389,19 @@ button:disabled {
   padding: 10px 12px;
   text-align: left;
 }
+/* Slide only: the toast is fully opaque from its first painted frame. An opacity fade-in left it
+   invisible for its whole life on slow software-GL clients, where the animation barely advances. */
 @keyframes order-toast-in {
   from {
     transform: translateY(8px);
-    opacity: 0;
   }
   to {
     transform: none;
-    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .order-toast {
+    animation: none;
   }
 }
 [inert] {

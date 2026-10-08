@@ -120,3 +120,115 @@ export const simClock = (seconds: number | null) => {
   const ss = String(s).padStart(2, "0");
   return h ? `${h}:${mm}:${ss}` : `${m}:${ss}`;
 };
+
+// ---------------------------------------------------------------- incoming-order toast lifecycle
+/**
+ * The toast must be seen, not just mounted. A wall-clock timer started at mount can expire before
+ * a slow (software GL) client paints the toast even once, so the countdown runs on painted frames:
+ * it starts at the first animation frame after mount, credits at most TOAST_MAX_FRAME_CREDIT_MS per
+ * frame (a starved main thread does not burn the countdown), credits nothing while held (tab hidden,
+ * pointer over it, keyboard focus inside), and never expires before TOAST_MIN_FRAMES painted frames.
+ * TOAST_MAX_FOREGROUND_MS bounds how long a very slow client keeps it up.
+ */
+export const TOAST_VISIBLE_MS = 6000;
+export const TOAST_MIN_FRAMES = 3;
+export const TOAST_MAX_FRAME_CREDIT_MS = 250;
+export const TOAST_MAX_FOREGROUND_MS = 30_000;
+const TOAST_MAX_FOREGROUND_CREDIT_MS = 5000;
+
+export interface ToastClock {
+  firstPaintAt: number | null;
+  lastFrameAt: number | null;
+  frames: number;
+  visibleMs: number;
+  foregroundMs: number;
+}
+
+export const newToastClock = (): ToastClock => ({
+  firstPaintAt: null,
+  lastFrameAt: null,
+  frames: 0,
+  visibleMs: 0,
+  foregroundMs: 0,
+});
+
+/** Records one animation frame at `now` (a rAF timestamp). `held` frames earn no credit. */
+export function toastFrame(clock: ToastClock, now: number, held = false): ToastClock {
+  if (clock.firstPaintAt === null)
+    return { firstPaintAt: now, lastFrameAt: now, frames: 1, visibleMs: 0, foregroundMs: 0 };
+  const gap = Math.max(0, now - (clock.lastFrameAt ?? now));
+  return {
+    ...clock,
+    lastFrameAt: now,
+    frames: clock.frames + 1,
+    visibleMs: clock.visibleMs + (held ? 0 : Math.min(gap, TOAST_MAX_FRAME_CREDIT_MS)),
+    foregroundMs: clock.foregroundMs + (held ? 0 : Math.min(gap, TOAST_MAX_FOREGROUND_CREDIT_MS)),
+  };
+}
+
+export function toastExpired(clock: ToastClock): boolean {
+  if (clock.firstPaintAt === null || clock.frames < TOAST_MIN_FRAMES) return false;
+  return clock.visibleMs >= TOAST_VISIBLE_MS || clock.foregroundMs >= TOAST_MAX_FOREGROUND_MS;
+}
+
+// ---------------------------------------------------------------- live frame batching
+/**
+ * Queues raw websocket payloads and hands them over in one batch per macrotask, so a burst that
+ * piled up behind a slow 3D frame costs one React render instead of one per frame.
+ */
+export function createFrameBatcher<T>(
+  apply: (batch: T[]) => void,
+  schedule: (flush: () => void) => void = (flush) => void setTimeout(flush, 0),
+) {
+  let queue: T[] = [];
+  let scheduled = false;
+  return {
+    push(item: T) {
+      queue.push(item);
+      if (scheduled) return;
+      scheduled = true;
+      schedule(() => {
+        scheduled = false;
+        const batch = queue;
+        queue = [];
+        if (batch.length) apply(batch);
+      });
+    },
+    clear() {
+      queue = [];
+    },
+  };
+}
+
+export type SnapshotFrame = Extract<LiveFrame, { type: "snapshot" }>;
+export type OrdersFrame = Extract<LiveFrame, { type: "orders" }>;
+export interface LiveBatchResult {
+  snapshot: SnapshotFrame | null;
+  orders: OrdersFrame | null;
+  rejected: number;
+  accepted: number;
+  lastSequence: number;
+}
+
+/**
+ * Validates every frame in a batch (so each malformed frame is still counted and never applied)
+ * and keeps only the newest snapshot and the newest orders frame for the session, in sequence order.
+ */
+export function reduceLiveBatch(raws: string[], sessionId: string, lastSequence: number): LiveBatchResult {
+  const result: LiveBatchResult = { snapshot: null, orders: null, rejected: 0, accepted: 0, lastSequence };
+  for (const raw of raws) {
+    let frame: LiveFrame;
+    try {
+      frame = parseLiveFrame(raw);
+    } catch {
+      result.rejected++;
+      continue;
+    }
+    if (frame.sessionId !== sessionId || frame.sequence <= result.lastSequence) continue;
+    result.lastSequence = frame.sequence;
+    result.accepted++;
+    if (frame.type === "snapshot") result.snapshot = frame;
+    else result.orders = frame;
+  }
+  return result;
+}

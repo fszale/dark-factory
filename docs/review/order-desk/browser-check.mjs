@@ -93,15 +93,64 @@ try {
   const placed = await api("/api/agent/v1/orders", { method: "POST", headers: { "idempotency-key": `ui-check-${Date.now()}` }, body: JSON.stringify({ quoteId: quote.body.quoteId, leadOption: "expedite" }) });
   const orderId = placed.body.order.orderId;
   note(`placed ${orderId} via REST with a throwaway local key (quote ${quote.status}, order ${placed.status})`);
-  await page.locator(".order-toast").waitFor({ timeout: 5000 });
-  note(`toast: "${await page.locator(".order-toast").textContent()}"`);
-  await shot("02-incoming-order-toast.png", "toast and feed row for the incoming agent order plus its card");
+  // Item 34: the toast must be really visible, not just in the DOM. Equivalent of Playwright's
+  // toBeVisible() plus a bounding box inside the viewport, computed opacity 1, and the toast on top
+  // at its own center (nothing covering it). Checked at first sight and again 5 s later.
+  const toast = page.locator(".order-toast");
+  await toast.waitFor({ state: "visible", timeout: 10_000 });
+  const toastSeenAt = Date.now();
+  const toastState = () =>
+    toast.evaluate((el) => {
+      const r = el.getBoundingClientRect();
+      const style = getComputedStyle(el);
+      const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+      return {
+        box: { x: Math.round(r.left), y: Math.round(r.top), width: Math.round(r.width), height: Math.round(r.height) },
+        viewport: { width: innerWidth, height: innerHeight },
+        opacity: Number(style.opacity),
+        visibility: style.visibility,
+        display: style.display,
+        onTop: hit !== null && el.contains(hit),
+        text: el.textContent,
+      };
+    });
+  const assertToastVisible = async (label) => {
+    if (!(await toast.isVisible())) throw new Error(`${label}: toast is not visible`);
+    let state = await toastState();
+    // Opacity must be 1 (no fade-in); allow one second for the slide-in to settle on slow GL.
+    for (let i = 0; i < 10 && state.opacity < 1; i++) {
+      await page.waitForTimeout(100);
+      state = await toastState();
+    }
+    const { box, viewport } = state;
+    const inside = box.width > 0 && box.height > 0 && box.x >= 0 && box.y >= 0 && box.x + box.width <= viewport.width && box.y + box.height <= viewport.height;
+    if (!inside) throw new Error(`${label}: toast box ${JSON.stringify(box)} is not inside the ${viewport.width}x${viewport.height} viewport`);
+    if (!(state.opacity > 0) || state.opacity < 1) throw new Error(`${label}: toast computed opacity is ${state.opacity}`);
+    if (state.visibility !== "visible" || state.display === "none") throw new Error(`${label}: toast visibility ${state.visibility}, display ${state.display}`);
+    if (!state.onTop) throw new Error(`${label}: something covers the toast at its center`);
+    note(`${label}: toast visible, box ${JSON.stringify(box)} inside ${viewport.width}x${viewport.height}, opacity ${state.opacity}, on top: ${state.onTop}, text "${state.text}"`);
+    return state;
+  };
+  await assertToastVisible("toast at first sight");
+  await shot("02-incoming-order-toast.png", "incoming agent order toast on screen (bottom right) with the matching feed row and card");
   await page.getByRole("button", { name: "Show unit detail" }).first().click();
   await page.waitForTimeout(500);
   await page.locator(".station-chip").first().scrollIntoViewIfNeeded();
   const projected = await page.locator(".station-chip.projected").count();
   note(`projected chips visible before commitment: ${projected}`);
   await shot("03-projected-chips.png", "unit detail before commitment: dashed projected station chips");
+  const toastBox = await toast.boundingBox();
+  if (toastBox) {
+    const pad = 24;
+    await page.screenshot({ path: join(out, "02b-incoming-order-toast-detail.png"), clip: { x: Math.max(0, toastBox.x - 260 - pad), y: Math.max(0, toastBox.y - 160 - pad), width: Math.min(1600, toastBox.width + 260 + 2 * pad), height: Math.min(1000, toastBox.height + 160 + 2 * pad) } });
+    note("screenshot 02b-incoming-order-toast-detail.png: close-up of the toast while it is up");
+  }
+  await assertToastVisible("toast still up after the projected-chips screenshot");
+  // The toast keeps its full duration: still up at least 5 s after it appeared, then it leaves on its own.
+  await page.waitForTimeout(Math.max(0, 5000 - (Date.now() - toastSeenAt)));
+  await assertToastVisible(`toast still up ${((Date.now() - toastSeenAt) / 1000).toFixed(1)} s after it appeared`);
+  await toast.waitFor({ state: "detached", timeout: 60_000 });
+  note(`toast dismissed itself after ${((Date.now() - toastSeenAt) / 1000).toFixed(1)} wall s (countdown runs on painted frames)`);
 
   await waitFor(orderId, (o) => o.units[0].stations.front.binding === "bound", 180_000);
   await page.waitForTimeout(1500);
