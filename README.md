@@ -69,6 +69,14 @@ Astra supervises the factory and TypeSafe Jev provides bounded operational judgm
 
 The physical stages require their own engineering, safety and economic validation. A successful simulation is a way to learn faster, not proof that a production plant is ready.
 
+## Plans and research
+
+These are proposals and notes, not implemented features.
+
+- [Joint design loop (DF-LOOP-001)](docs/plans/spacex-design-loop.md): delete and simplify product and factory work together before anything is automated.
+- [Shop-as-MCP sourcing (DF-SHOP-001)](docs/plans/shop-mcp-sourcing.md): design agents check DFM, price and lead time directly against a shop's API, then stop for a human to approve any purchase. Includes a draft tool schema and a mock reference shop experiment.
+- [People we track](docs/people/README.md): builders whose public work shapes the plan, starting with [Caleb Chamberlain of OSH Cut](docs/people/oshbuilt-caleb-osh-cut.md) and his "every shop is an API endpoint" thesis.
+
 ## Build with us
 
 Contributions are welcome in simulation correctness, production recipes, original 3D assets, visualization, metrics and future hardware adapters. Start with the [architecture](docs/architecture.md) and [station adapter boundary](docs/station-adapters.md), or [open an issue](https://github.com/fszale/dark-factory/issues) to discuss a concrete improvement.
