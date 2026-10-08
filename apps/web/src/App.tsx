@@ -34,9 +34,17 @@ import {
 import { FactoryWorld } from "./world.ts";
 import { FactoryAudio } from "./audio.ts";
 import { AdaptiveComparisonPanel } from "./AdaptiveComparisonPanel.tsx";
+import { OrdersPanel } from "./OrdersPanel.tsx";
+import {
+  FLOOR_SESSION_ID,
+  agentOrderForVehicle,
+  arrivals,
+  newOrderMessage,
+  parseLiveFrame,
+} from "./orderFloor.ts";
+import type { OrderDeskView } from "../../../packages/contracts/src/orders.ts";
 import {
   snapshotSchema,
-  snapshotMessageSchema,
   providerStatusSchema,
   experimentResultSchema,
   checkpointSchema,
@@ -471,7 +479,7 @@ function App() {
   const [providers, setProviders] = useState<ProviderStatus | null>(null);
   const [selected, setSelected] = useState("");
   const [panel, setPanel] = useState<
-    "inspector" | "metrics" | "controls" | "ai"
+    "inspector" | "metrics" | "controls" | "ai" | "orders"
   >("inspector");
   const [panelOpen, setPanelOpen] = useState(false);
   const [cameraOpen, setCameraOpen] = useState(false);
@@ -515,6 +523,23 @@ function App() {
   const [experimentBusy, setExperimentBusy] = useState(false);
   const [chartMetric, setChartMetric] = useState<ChartKey>("throughput");
   const [experiment, setExperiment] = useState<ExperimentResult | null>(null);
+  // DF-ORDER-001: shared order floor (read-only unless the operator code is accepted).
+  const floorRef = useRef(false);
+  const floorSocket = useRef<WebSocket | null>(null);
+  const floorTimer = useRef<number | null>(null);
+  const sessionSnapshot = useRef<FactorySnapshot | null>(null);
+  const floorDeskRef = useRef<OrderDeskView | null>(null);
+  const toastTimer = useRef<number | null>(null);
+  const [floorView, setFloorView] = useState(false);
+  const [floorDesk, setFloorDesk] = useState<OrderDeskView | null>(null);
+  const [floorStatus, setFloorStatus] = useState({
+    active: false,
+    publicView: false,
+    operator: false,
+  });
+  const [floorOperator, setFloorOperator] = useState(false);
+  const [floorFeed, setFloorFeed] = useState<string[]>([]);
+  const [toast, setToast] = useState("");
 
   const connectSocket = useCallback((next: Session) => {
     sessionRef.current = next;
@@ -540,8 +565,12 @@ function App() {
       if (socket.current !== ws) return;
       try {
         const validationStart = performance.now();
-        const message = snapshotMessageSchema.parse(JSON.parse(event.data));
-        if (message.sessionId !== next.id || message.sequence <= lastSequence)
+        const message = parseLiveFrame(event.data);
+        if (
+          message.type !== "snapshot" ||
+          message.sessionId !== next.id ||
+          message.sequence <= lastSequence
+        )
           return;
         lastSequence = message.sequence;
         setClientMetrics((current) => ({
@@ -551,7 +580,8 @@ function App() {
             : 0,
           validationMs: performance.now() - validationStart,
         }));
-        setSnapshot(message.snapshot as FactorySnapshot);
+        sessionSnapshot.current = message.snapshot as FactorySnapshot;
+        if (!floorRef.current) setSnapshot(message.snapshot as FactorySnapshot);
       } catch {
         setClientMetrics((current) => ({
           ...current,
@@ -792,6 +822,43 @@ function App() {
   const command = useCallback(
     (partial: Omit<FactoryCommand, "id" | "revision" | "epoch">) => {
       const execute = async () => {
+        if (floorRef.current) {
+          // Floor commands go through the operator route; the server enforces its allowlist.
+          if (!floorOperator) {
+            setError(
+              "The shared order floor is read-only. Enter the operator access code to use controls.",
+            );
+            return;
+          }
+          if (!snapshot) return;
+          try {
+            setError("");
+            const response = await fetch("/api/order-floor/command", {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({
+                ...(accessCode ? { accessCode } : {}),
+                command: {
+                  ...partial,
+                  id: `floor-${crypto.randomUUID()}`,
+                  revision: snapshot.revision,
+                  epoch: snapshot.epoch,
+                },
+              }),
+            });
+            const body = (await response.json().catch(() => ({}))) as {
+              message?: string;
+              error?: { message?: string };
+            };
+            const message =
+              body.message ?? body.error?.message ?? `Floor command failed (${response.status})`;
+            setNotice(message);
+            if (!response.ok) setError(message);
+          } catch (reason) {
+            setError(reason instanceof Error ? reason.message : "Floor command failed.");
+          }
+          return;
+        }
         if (!session || !snapshot) return;
         try {
           setError("");
@@ -833,8 +900,150 @@ function App() {
       commandQueue.current = queued.catch(() => undefined);
       return queued;
     },
-    [session, snapshot, recoverSession],
+    [session, snapshot, recoverSession, floorOperator, accessCode],
   );
+
+  const refreshFloorStatus = useCallback(async (code?: string) => {
+    try {
+      const response = await fetch("/api/order-floor/status", {
+        headers: code ? { "x-access-code": code } : {},
+      });
+      if (!response.ok) return null;
+      const body = (await response.json()) as {
+        active?: boolean;
+        publicView?: boolean;
+        operator?: boolean;
+      };
+      const next = {
+        active: body.active === true,
+        publicView: body.publicView === true,
+        operator: body.operator === true,
+      };
+      setFloorStatus(next);
+      return next;
+    } catch {
+      return null;
+    }
+  }, []);
+  useEffect(() => {
+    void refreshFloorStatus();
+  }, [refreshFloorStatus]);
+
+  const closeFloor = useCallback((message?: string) => {
+    floorRef.current = false;
+    if (floorTimer.current) window.clearTimeout(floorTimer.current);
+    if (floorSocket.current) {
+      floorSocket.current.onclose = null;
+      floorSocket.current.close();
+      floorSocket.current = null;
+    }
+    floorDeskRef.current = null;
+    setFloorView(false);
+    setFloorDesk(null);
+    setFloorOperator(false);
+    setSelected("");
+    if (sessionSnapshot.current) setSnapshot(sessionSnapshot.current);
+    if (message) setNotice(message);
+  }, []);
+
+  const openFloor = useCallback(
+    (code: string) => {
+      floorRef.current = true;
+      setFloorView(true);
+      setSelected("");
+      if (floorTimer.current) window.clearTimeout(floorTimer.current);
+      floorSocket.current?.close();
+      const protocol = location.protocol === "https:" ? "wss" : "ws";
+      const ws = new WebSocket(`${protocol}://${location.host}/api/live`);
+      floorSocket.current = ws;
+      let lastSequence = -1;
+      ws.onopen = () => {
+        ws.send(
+          JSON.stringify({ view: "order-floor", ...(code ? { accessCode: code } : {}) }),
+        );
+        setNotice("Watching the shared order floor (read-only)");
+      };
+      ws.onmessage = (event) => {
+        if (floorSocket.current !== ws || !floorRef.current) return;
+        try {
+          const message = parseLiveFrame(event.data);
+          if (
+            message.sessionId !== FLOOR_SESSION_ID ||
+            message.sequence <= lastSequence
+          )
+            return;
+          lastSequence = message.sequence;
+          if (message.type === "snapshot") {
+            setSnapshot(message.snapshot as FactorySnapshot);
+            return;
+          }
+          const fresh = arrivals(floorDeskRef.current, message.desk);
+          floorDeskRef.current = message.desk;
+          setFloorDesk(message.desk);
+          if (fresh.length) {
+            const lines = fresh.map(newOrderMessage);
+            setFloorFeed((current) => [...lines.reverse(), ...current].slice(0, 20));
+            setToast(lines[0]);
+            if (toastTimer.current) window.clearTimeout(toastTimer.current);
+            toastTimer.current = window.setTimeout(() => setToast(""), 6000);
+          }
+        } catch {
+          // A malformed floor frame is dropped; the last verified state stays on screen.
+          setClientMetrics((current) => ({
+            ...current,
+            invalidFrames: current.invalidFrames + 1,
+          }));
+          setError(
+            "An invalid order floor update was rejected; showing the last verified state.",
+          );
+        }
+      };
+      ws.onclose = (event) => {
+        if (floorSocket.current !== ws || !floorRef.current || !mounted.current)
+          return;
+        if (event.code === 1013 || event.code === 1008) {
+          closeFloor(
+            event.code === 1013
+              ? "The order desk was turned off; back to your session."
+              : "The order floor view is not available.",
+          );
+          void refreshFloorStatus();
+          return;
+        }
+        floorTimer.current = window.setTimeout(() => {
+          if (floorRef.current) openFloor(code);
+        }, 2000);
+      };
+    },
+    [closeFloor, refreshFloorStatus],
+  );
+  useEffect(
+    () => () => {
+      if (floorTimer.current) window.clearTimeout(floorTimer.current);
+      if (toastTimer.current) window.clearTimeout(toastTimer.current);
+      if (floorSocket.current) {
+        floorSocket.current.onclose = null;
+        floorSocket.current.close();
+      }
+    },
+    [],
+  );
+  const toggleFloor = () => {
+    if (floorRef.current) closeFloor("Back to your session");
+    else {
+      setFloorOperator(floorStatus.operator);
+      openFloor(floorStatus.publicView ? "" : accessCode);
+    }
+  };
+  const unlockFloor = async () => {
+    const status = await refreshFloorStatus(accessCode);
+    setFloorOperator(status?.operator === true);
+    if (status?.operator) setNotice("Floor controls unlocked for this operator");
+    else setError("The access code was not accepted for floor controls.");
+  };
+  const floorAvailable =
+    floorStatus.active && (floorStatus.publicView || floorStatus.operator);
+  const controlsLocked = floorView && !floorOperator;
 
   const choosePreset = (value: ViewPreset) => {
     setPreset(value);
@@ -1146,6 +1355,13 @@ function App() {
     () => snapshot?.vehicles.find((vehicle) => vehicle.id === selected),
     [snapshot, selected],
   );
+  const selectedAgentOrder = useMemo(
+    () =>
+      floorView && selectedVehicle
+        ? agentOrderForVehicle(floorDesk, selectedVehicle.id)
+        : null,
+    [floorView, floorDesk, selectedVehicle],
+  );
   const selectedTruck = useMemo(
     () => snapshot?.trucks.find((truck) => truck.id === selected),
     [snapshot, selected],
@@ -1399,7 +1615,7 @@ function App() {
         ))}
       </section>
 
-      <section className="control-dock glass">
+      <section className="control-dock glass" inert={controlsLocked}>
         <div className="run-controls">
           <button
             className="primary action"
@@ -1498,7 +1714,41 @@ function App() {
             >
               Intelligence
             </button>
+            <button
+              className={panel === "orders" ? "active" : ""}
+              onClick={() => setPanel("orders")}
+            >
+              Orders
+            </button>
           </nav>
+          {panel === "orders" && (
+            <OrdersPanel
+              desk={floorDesk}
+              floorView={floorView}
+              floorAvailable={floorAvailable}
+              floorOperator={floorOperator}
+              feed={floorFeed}
+              sessionOrders={floorView ? [] : (snapshot?.orders ?? [])}
+              accessCode={accessCode}
+              onAccessCode={setAccessCode}
+              onUnlock={() => void unlockFloor()}
+              onToggleFloor={toggleFloor}
+              onCancelSessionOrder={(orderId) =>
+                void command({ type: "order-cancel", value: orderId })
+              }
+              onSelectVehicle={(vehicleId) => {
+                if (!snapshot?.vehicles.some((vehicle) => vehicle.id === vehicleId)) {
+                  setNotice(
+                    `${vehicleId} has left the factory floor; follow it in the tracking strip.`,
+                  );
+                  return;
+                }
+                setSelected(vehicleId);
+                world.current?.select(vehicleId);
+                setPanel("inspector");
+              }}
+            />
+          )}
           {panel === "inspector" && (
             <div className="panel-body">
               <div className="section-title">
@@ -1695,6 +1945,15 @@ function App() {
                     <span>
                       Order<b>{selectedVehicle.orderId ?? "Legacy order"}</b>
                     </span>
+                    {selectedAgentOrder && (
+                      <span>
+                        Agent order
+                        <b>
+                          {selectedAgentOrder.card.orderId} ·{" "}
+                          {selectedAgentOrder.card.agentLabel}
+                        </b>
+                      </span>
+                    )}
                     <span>
                       Slot<b>{selectedVehicle.slot + 1}</b>
                     </span>
@@ -1737,6 +1996,12 @@ function App() {
                       </button>
                     ))}
                   </div>
+                  <button
+                    className="wide-button"
+                    onClick={() => followEntity(selectedVehicle.id)}
+                  >
+                    Follow vehicle
+                  </button>
                 </>
               )}
               {selectedTruck && snapshot && (
@@ -1955,6 +2220,57 @@ function App() {
               <div className="section-title">
                 <Activity size={17} /> Simulation metrics
               </div>
+              {floorView && floorDesk && (
+                <details className="metric-group" open>
+                  <summary>
+                    <span>Agent orders</span>
+                    <small>
+                      Simulated on the shared order floor. Virtual orders only.
+                    </small>
+                  </summary>
+                  <div className="metric-grid">
+                    <span>
+                      Active<b>{floorDesk.metrics.active}</b>
+                    </span>
+                    <span>
+                      Delivered<b>{floorDesk.metrics.delivered}</b>
+                    </span>
+                    <span>
+                      Cancelled<b>{floorDesk.metrics.cancelled}</b>
+                    </span>
+                    <span>
+                      Failed<b>{floorDesk.metrics.failed}</b>
+                    </span>
+                    <span>
+                      Mean quoted ship
+                      <b>
+                        {floorDesk.metrics.meanQuotedShipSeconds === null
+                          ? "none yet"
+                          : `${format(floorDesk.metrics.meanQuotedShipSeconds, 1)} sim s`}
+                      </b>
+                    </span>
+                    <span>
+                      Mean actual ship
+                      <b>
+                        {floorDesk.metrics.meanActualShipSeconds === null
+                          ? "none yet"
+                          : `${format(floorDesk.metrics.meanActualShipSeconds, 1)} sim s`}
+                      </b>
+                    </span>
+                    <span>
+                      On-time share
+                      <b>
+                        {floorDesk.metrics.onTimeShare === null
+                          ? "none yet"
+                          : `${format(floorDesk.metrics.onTimeShare * 100)}%`}
+                      </b>
+                    </span>
+                    <span>
+                      Source<b>{floorDesk.metrics.source}</b>
+                    </span>
+                  </div>
+                </details>
+              )}
               <details className="metric-group">
                 <summary>
                   <span>Application monitoring</span>
@@ -2271,7 +2587,7 @@ function App() {
             </div>
           )}
           {panel === "controls" && (
-            <div className="panel-body">
+            <div className="panel-body" inert={controlsLocked}>
               <div className="section-title">
                 <SlidersHorizontal size={17} /> Manual operations
               </div>
@@ -2782,6 +3098,24 @@ function App() {
         </aside>
       )}
 
+      {toast && (
+        <div className="order-toast glass" role="status" aria-live="polite">
+          <button
+            onClick={() => {
+              setToast("");
+              setPanel("orders");
+              setPanelOpen(true);
+            }}
+          >
+            {toast}
+          </button>
+        </div>
+      )}
+      {floorView && (
+        <div className="floor-ribbon" role="status">
+          Shared order floor, read-only{floorOperator ? " (operator controls unlocked)" : ""}
+        </div>
+      )}
       <footer className="bottom-bar glass">
         <span>{notice}</span>
         {error && <span className="error">{error}</span>}

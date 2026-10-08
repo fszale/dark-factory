@@ -1,0 +1,23 @@
+2026-10-08T05:37:56.423Z floor banner: "Shared order floor, read-only. Agent orders run here."; control dock inert without code: true
+2026-10-08T05:38:00.166Z screenshot 01-floor-read-only.png: floor view with read-only banner, controls dimmed and inert, no agent orders yet
+2026-10-08T05:38:00.519Z placed ao-2bgjiz6ru5 via REST with a throwaway local key (quote 200, order 200)
+2026-10-08T05:38:00.553Z toast: "New agent order ao-2bgjiz6ru5 from Test Agent: 1 robotaxi, expedite, zone-metro."
+2026-10-08T05:38:03.218Z screenshot 02-incoming-order-toast.png: toast and feed row for the incoming agent order plus its card
+2026-10-08T05:38:06.826Z projected chips visible before commitment: 5
+2026-10-08T05:38:11.206Z screenshot 03-projected-chips.png: unit detail before commitment: dashed projected station chips
+2026-10-08T05:38:24.328Z bound chips after commitment: 5
+2026-10-08T05:38:29.747Z screenshot 04-bound-chips.png: unit committed: solid bound chips with module id and lot
+2026-10-08T05:38:35.151Z clicked vehicle taxi-1; inspector shows agent order row: true; follow button: 1
+2026-10-08T05:38:37.443Z screenshot 05-inspector-link.png: vehicle selected in the Inspector with the Agent order row and Follow vehicle
+2026-10-08T05:38:37.448Z operator speed 10: {"ok":true,"message":"Applied","revision":3}
+2026-10-08T05:38:50.810Z tracking strip visible: 1
+2026-10-08T05:38:56.216Z screenshot 06-tracking-strip.png: virtual carrier tracking strip with legs and ETA while in transit
+2026-10-08T05:39:20.089Z card status text: "delivered"
+2026-10-08T05:39:25.259Z screenshot 07-delivered.png: order delivered; stepper complete; recent updates with factory event ids
+2026-10-08T05:39:30.392Z screenshot 08-metrics-agent-orders.png: Metrics drawer Agent orders group, labeled simulated
+2026-10-08T05:39:39.362Z after entering the operator code, control dock inert: false
+2026-10-08T05:39:42.596Z screenshot 09-operator-unlocked.png: operator code accepted: controls enabled, ribbon notes operator controls
+2026-10-08T05:39:46.913Z after leaving the floor, banner count: 0
+2026-10-08T05:39:51.514Z screenshot 10-this-session.png: back on the visitor session: This session order list with cancel for queued orders
+2026-10-08T05:39:51.514Z console errors: none
+2026-10-08T05:39:51.514Z server log contains key or code: false

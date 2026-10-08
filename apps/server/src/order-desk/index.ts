@@ -70,8 +70,10 @@ export function registerOrderDesk(app: FastifyInstance, options: OrderDeskOption
     if (!runtime.hasFloor) return sendDeskError(reply, disabledError());
   });
 
-  app.get("/api/order-floor/status", async () => ({
+  app.get("/api/order-floor/status", async (request) => ({
     enabled: runtime.config.enabled,
+    /** Whether the supplied x-access-code (or none) grants operator floor controls. */
+    operator: runtime.config.enabled && operator.allows(header(request)),
     active: runtime.active(),
     killSwitch: runtime.killSwitchThrown,
     publicView: runtime.config.enabled && runtime.config.publicView,

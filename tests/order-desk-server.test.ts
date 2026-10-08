@@ -183,6 +183,12 @@ describe("order desk server: floor authority, kill switch and pause (tasks 3 and
       await app.inject({ method: "POST", url: "/api/agent/v1/orders", headers: keys.a.auth, payload: { quoteId: quote.quoteId, leadOption: "standard", idempotencyKey: "auth-key-001" } });
       const noCode = await app.inject({ method: "POST", url: "/api/order-floor/command", payload: { command: { id: "r0", type: "reset" } } });
       expect(noCode.statusCode).toBe(403);
+      // The web Orders tab learns operator rights from the status route (no secret is echoed).
+      const statusNoCode = json(await app.inject({ method: "GET", url: "/api/order-floor/status" }));
+      const statusWrong = json(await app.inject({ method: "GET", url: "/api/order-floor/status", headers: { "x-access-code": "wrong-code" } }));
+      const statusOk = json(await app.inject({ method: "GET", url: "/api/order-floor/status", headers: { "x-access-code": "operator-test-code" } }));
+      expect([statusNoCode.operator, statusWrong.operator, statusOk.operator]).toEqual([false, false, true]);
+      expect(JSON.stringify(statusOk)).not.toContain("operator-test-code");
       const op = (command: Record<string, unknown>) =>
         app.inject({ method: "POST", url: "/api/order-floor/command", payload: { accessCode: "operator-test-code", command } });
       const reset = await op({ id: "r1", type: "reset" });

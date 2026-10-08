@@ -1305,6 +1305,7 @@ export class OrderDesk {
         return {
           orderId: order.orderId,
           agentLabel: order.agentLabel.slice(0, 80),
+          modelId: order.config.modelId.slice(0, 80),
           status: view.status,
           statusReason: view.statusReason,
           atRisk: view.atRisk,

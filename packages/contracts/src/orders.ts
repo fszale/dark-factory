@@ -606,6 +606,7 @@ export const ORDER_TOOL_SUMMARIES: Record<OrderToolName, string> = {
 export const deskOrderCard = z.object({
   orderId: agentOrderId,
   agentLabel: z.string().max(80),
+  modelId: z.string().max(80),
   status: orderStatus,
   statusReason: z.string().nullable(),
   atRisk: z.object({ value: z.boolean(), reasons: z.array(z.string()).max(10) }),
