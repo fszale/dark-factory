@@ -371,4 +371,20 @@ describe("order desk server: persistence and recovery (task 13, R19)", () => {
       await app.close();
     }
   });
+  it("keeps /api/health at 200 and visitor session capacity at 10 with the desk enabled (the floor is not a session)", async () => {
+    const { app, runtime } = await orderApp();
+    try {
+      expect(runtime.active()).toBe(true);
+      expect((await app.inject({ method: "GET", url: "/api/health" })).statusCode).toBe(200);
+      for (let index = 0; index < 10; index++) {
+        const created = await app.inject({ method: "POST", url: "/api/sessions", payload: { seed: index + 1 } });
+        expect(created.statusCode, `session ${index + 1}`).toBe(200);
+      }
+      const overflow = await app.inject({ method: "POST", url: "/api/sessions", payload: { seed: 99 } });
+      expect(overflow.statusCode).toBe(503);
+      expect((await app.inject({ method: "GET", url: "/api/order-floor/status" })).json()).toMatchObject({ active: true });
+    } finally {
+      await app.close();
+    }
+  });
 });
