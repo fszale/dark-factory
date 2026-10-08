@@ -32,6 +32,24 @@ The world and manual simulation are available without paid model access. Live mo
 - Reload to confirm session/checkpoint recovery. Save exported checkpoints outside the deployment before replacing it.
 - Confirm logs contain no credentials. Keep `.data/archives` private: deployment replacement can lose local files, and durable external archive storage is future work.
 
+## Virtual order desk (DF-ORDER-001): keep off until Filip says yes
+
+The order desk is implemented but **not deployed**. `.replit` sets `ORDER_DESK_ENABLED = "false"`, and the server also defaults to off. Do not change that, issue agent keys, or list the server in any MCP registry without Filip's explicit yes.
+
+When Filip approves a publish with the desk on:
+
+1. Add `BRICKWORKS_AGENT_KEYS` as a deployment secret. It holds hashes only. Each bearer key is generated offline, handed to its agent, and never stored. Set `ORDER_DESK_ENABLED=true` and `PUBLIC_BASE_URL=https://<published host>`. Decide `ORDER_FLOOR_PUBLIC_VIEW` and `ORDER_DESK_ANON_READ` explicitly, and set `TRUST_PROXY=true` behind Replit's proxy so per-IP limits see real clients.
+2. Keep one Reserved VM process with no replicas: the floor and desk live in memory.
+3. `.data/orders` can be lost on republish. Save the floor first with `GET /api/order-floor/export` (header `x-access-code`) and restore it with `POST /api/order-floor/import`.
+4. Re-run `scripts/agent-order-soak.mjs` locally before publishing, and compare memory against the corrected soak.
+5. Published-URL acceptance:
+   - discovery documents show the https public URL;
+   - `/mcp` without a key returns 401 for tools that need a key;
+   - with a dedicated QA key, an agent quotes, orders and sees delivery, then the QA key is revoked;
+   - SSE and long polling survive the proxy;
+   - logs contain no keys.
+6. Emergency stop without a redeploy: `POST /api/order-floor/kill-switch` with `{ "accessCode": "...", "thrown": true }`. Removing `ORDER_DESK_ENABLED` and restarting turns the desk off permanently.
+
 ## Updates
 
 Commit tested changes to GitHub, pull the chosen commit into the Replit project, rebuild, and republish. A GitHub push alone does not promise automatic Replit publication. Republish replaces the server process; clients restore their saved checkpoints into new paused sessions. Review the published URL after every release.

@@ -1,0 +1,75 @@
+{
+  "status": "running",
+  "startedAt": "2026-10-08T05:47:49.798Z",
+  "durationSeconds": 1800,
+  "note": "Local bundled server, order desk enabled, virtual orders only, throwaway key held in memory. Not deployed.",
+  "orders": {
+    "placed": 1,
+    "refused": 0,
+    "errors": []
+  },
+  "samples": [
+    {
+      "wallSeconds": 2,
+      "floorSimSeconds": 2,
+      "materialDelta": 0,
+      "receivingDelta": 0,
+      "ledgerDelta": 0,
+      "floorEvents": 8,
+      "floorSamples": 1,
+      "deskUpdates": 0,
+      "deskOrders": 0,
+      "deskMetrics": {
+        "active": 0,
+        "delivered": 0,
+        "cancelled": 0,
+        "failed": 0,
+        "meanQuotedShipSeconds": null,
+        "meanActualShipSeconds": null,
+        "onTimeShare": null,
+        "source": "simulated"
+      },
+      "floorFrames": 17,
+      "ordersFrames": 2,
+      "floorErrors": 0,
+      "floorClosed": false,
+      "uptimeSeconds": 2.451998692,
+      "heapUsedBytes": 33379496,
+      "rssBytes": 119889920,
+      "activeSessions": 1,
+      "viewers": 1,
+      "tickProcessingMs": 0.1590360000000146
+    },
+    {
+      "wallSeconds": 62,
+      "floorSimSeconds": 62.25,
+      "materialDelta": 0,
+      "receivingDelta": 0,
+      "ledgerDelta": 0,
+      "floorEvents": 37,
+      "floorSamples": 13,
+      "deskUpdates": 3,
+      "deskOrders": 1,
+      "deskMetrics": {
+        "active": 1,
+        "delivered": 0,
+        "cancelled": 0,
+        "failed": 0,
+        "meanQuotedShipSeconds": null,
+        "meanActualShipSeconds": null,
+        "onTimeShare": null,
+        "source": "simulated"
+      },
+      "floorFrames": 498,
+      "ordersFrames": 63,
+      "floorErrors": 0,
+      "floorClosed": false,
+      "uptimeSeconds": 62.713033874,
+      "heapUsedBytes": 32306176,
+      "rssBytes": 119414784,
+      "activeSessions": 1,
+      "viewers": 1,
+      "tickProcessingMs": 0.07615999999688938
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "status": "running",
+  "startedAt": "2026-10-08T05:47:49.879Z",
+  "durationSeconds": 1800,
+  "speed": 10,
+  "note": "Real wall-clock server and WebSocket soak. Browser rendering stress is measured separately. No AI calls or credentials are used.",
+  "samples": [
+    {
+      "wallSeconds": 0.008,
+      "simSeconds": 0,
+      "completed": 0,
+      "dispatched": 0,
+      "materialDelta": 0,
+      "receivingDelta": 0,
+      "events": 2,
+      "samples": 1,
+      "activeVehicles": 0,
+      "activeModules": 0,
+      "frames": 1,
+      "streamErrors": 0,
+      "uptimeSeconds": 0.530027549,
+      "heapUsedBytes": 39128792,
+      "rssBytes": 117268480,
+      "activeSessions": 1,
+      "viewers": 1,
+      "tickProcessingMs": 0.09897799999998824
+    },
+    {
+      "wallSeconds": 60.018,
+      "simSeconds": 598.75,
+      "completed": 13,
+      "dispatched": 10,
+      "materialDelta": 0,
+      "receivingDelta": 0,
+      "events": 342,
+      "samples": 120,
+      "activeVehicles": 3,
+      "activeModules": 13,
+      "frames": 480,
+      "streamErrors": 0,
+      "uptimeSeconds": 60.540083076,
+      "heapUsedBytes": 32177608,
+      "rssBytes": 119283712,
+      "activeSessions": 1,
+      "viewers": 1,
+      "tickProcessingMs": 0.19886599999881582
+    }
+  ]
+}

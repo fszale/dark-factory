@@ -12,6 +12,10 @@ flowchart LR
   S --> P[Provider adapters: Astra / Jev]
   M --> E[Snapshots, events, metrics, exports]
   S --> X[Experiment worker]
+  A[External AI agents] -- MCP /mcp + REST /api/agent/v1 --> D[Order desk, off by default]
+  D -- desk-only commands --> F[Pinned order-floor simulation]
+  D --> Q[Forecast worker]
+  F -- order floor live frames --> W
 ```
 
 Active sessions are bounded, in memory, and identified by the snapshot ID. They are not a durable production-control system. A run export includes the snapshot plus bounded internal replay state. A separate private NDJSON archive persists ordered event, command, decision, and completed-lineage evidence under explicit retention and disk quotas; authenticated replay uses that archive to create a new paused session.
@@ -34,6 +38,22 @@ Every command is validated by the shared strict Zod schema. Commands carry optio
 
 Provider responses are converted to the same command shape. A provider cannot directly mutate a session. The server records applied, advisory, rejected, pending, and error decisions so operators can distinguish advice from actual state changes.
 
+
+## Order desk (DF-ORDER-001, off by default)
+
+The order desk lets outside AI agents buy virtual robotaxis from the simulation. Its spec is [vehicle-order-mcp](plans/vehicle-order-mcp.md). Nothing is registered as active unless `ORDER_DESK_ENABLED=true`. With the flag off, every desk path (`/mcp`, `/api/agent/v1/*`, the discovery documents, `/api/order-floor/*`) answers 503, no floor exists, and visitor sessions are unchanged.
+
+| Part | Code | Role |
+| --- | --- | --- |
+| Contracts | `packages/contracts/src/orders.ts` | Strict Zod schemas for the eight tools, order views, updates, the floor desk view and the `orders` live frame. |
+| Order core | `packages/orders` | Catalog, feasibility, virtual price book `pb-2026-10-v1`, XState 5 lifecycle machines, the bridge from factory audit entries to order events, the seeded virtual carrier, forecasting by forking the floor, the desk (quotes, placement, idempotency, cancel, update log, cursors), and archive replay. |
+| Order floor | `apps/server/src/order-desk/floor.ts` | One pinned `FactorySimulation` with id `order-floor`, outside session expiry and `maxSessions`, locked to manual mode. It advances in fixed 0.125 second real-time steps so forecasts are exact, persists atomically to `ORDER_DATA_DIR/order-floor.json`, and writes its own NDJSON archive. |
+| Transports | `mcp.ts`, `rest.ts`, `discovery.ts` | MCP Streamable HTTP through the official SDK, with Origin and Host checks and sessions bound to the agent. A REST mirror with long poll and SSE. OpenAPI generated from the same Zod schemas. `/llms.txt`, `/mcp/server-card`, `/.well-known/mcp.json` and `/.well-known/mcp/catalog.json` from one tool registry. |
+| Access | `auth.ts`, `config.ts` | Bearer agent keys stored only as SHA-256 hashes, scopes, sliding-window rate limits, per-agent caps, and a shared forecast queue (concurrency 1). |
+| Operator | `index.ts` | `/api/order-floor/*`: status, view, allowlisted floor commands, carrier hold and release, intake pause, the runtime kill switch, and export and import. Each needs the operator access code when one is configured. |
+| Web | `apps/web/src/OrdersPanel.tsx` | Orders tab with a read-only "Watch order floor" view fed by `{ view: "order-floor" }` on `/api/live`. |
+
+Authority stays with the server. The desk sees the floor only through `subscribeEvents` audit entries and can issue only `order-agent-create` and `order-cancel`. Agents never touch `FactorySnapshot`, and the generic session command route rejects `order-agent-create` with 403. Every response says `virtual: true`, and the price currency is the literal `BWC-VIRTUAL`.
 
 ### Live stream work budget
 The server scheduler reads immutable scalar status instead of cloning retained history for housekeeping. Sessions without pending AI aftermath advance directly. Each session serializes a live snapshot at most once per stream sequence and shares it among viewers; slow sockets skip superseded frames above a 512 KB outbound backlog. Live event display retains the latest 200 events, while full REST snapshots, checkpoints, chart retention and durable history exports remain unchanged.
