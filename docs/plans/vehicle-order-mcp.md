@@ -364,7 +364,10 @@ export const agentReference = z
 export const virtualAmount = z
   .object({ amount: z.number().finite().nonnegative(), currency: z.literal("BWC-VIRTUAL") })
   .strict();
-const virtualNotice = { virtual: z.literal(true), disclaimer: z.string() };
+// Safety rule 1: every agent-facing body carries these two fields at the top level (correction 36).
+export const VIRTUAL_DISCLAIMER = "Virtual order in the Brickworks simulation. No payment, no physical vehicle, no shipment.";
+export const virtualNotice = { virtual: z.literal(true), disclaimer: z.literal(VIRTUAL_DISCLAIMER) };
+export const withVirtualNotice = <T extends object>(body: T) => ({ ...body, virtual: true as const, disclaimer: VIRTUAL_DISCLAIMER });
 
 export const feasibilityIssue = z.object({
   code: z.enum([
@@ -543,19 +546,19 @@ export const orderSummary = orderView.pick({
 export const placeOrderInput = z
   .object({ quoteId, leadOption: z.enum(LEAD_OPTIONS), idempotencyKey, agentReference: agentReference.optional() })
   .strict();                                       // no approval token: no money moves (contrast DF-SHOP-001 placeOrderInput)
-export const placeOrderOutput = z.object({ order: orderView, replayed: z.boolean() });
+export const placeOrderOutput = z.object({ order: orderView, replayed: z.boolean(), ...virtualNotice });
 
 // ---------- get_order / list_orders ----------
 export const getOrderInput = z.object({ orderId: agentOrderId }).strict();
-export const getOrderOutput = z.object({ order: orderView });
+export const getOrderOutput = z.object({ order: orderView, ...virtualNotice });
 export const listOrdersInput = z
   .object({ status: z.array(orderStatus).max(13).optional(), cursor: z.string().max(64).optional(), limit: z.number().int().min(1).max(50).default(20) })
   .strict();
-export const listOrdersOutput = z.object({ orders: z.array(orderSummary), nextCursor: z.string().nullable() });
+export const listOrdersOutput = z.object({ orders: z.array(orderSummary), nextCursor: z.string().nullable(), ...virtualNotice });
 
 // ---------- cancel_order ----------
 export const cancelOrderInput = z.object({ orderId: agentOrderId, idempotencyKey }).strict();
-export const cancelOrderOutput = z.object({ order: orderView, cancelled: z.boolean(), replayed: z.boolean() });
+export const cancelOrderOutput = z.object({ order: orderView, cancelled: z.boolean(), replayed: z.boolean(), ...virtualNotice });
 
 // ---------- get_order_updates ----------
 export const ORDER_UPDATE_TYPES = [
@@ -593,9 +596,10 @@ export const getOrderUpdatesOutput = z.object({
   nextCursor: z.string(),
   hasMore: z.boolean(),
   oldestRetainedSeq: z.number().int(),             // a cursor older than this returns CURSOR_EXPIRED
+  ...virtualNotice,
 });
 
-// ---------- errors (MCP isError structuredContent and REST body) ----------
+// ---------- errors (REST body; MCP isError result as JSON text in content[0], correction 37) ----------
 export const orderDeskError = z.object({
   error: z.object({
     code: z.enum([
@@ -608,6 +612,7 @@ export const orderDeskError = z.object({
     retryAfterSeconds: z.number().int().optional(),
     issues: z.array(feasibilityIssue).optional(),
   }),
+  ...virtualNotice,
 });
 ```
 
@@ -665,7 +670,7 @@ For agents without an MCP client. Same `OrderDesk` service, same Zod schemas, sa
 
 HTTP status mapping: `VALIDATION_FAILED` 400, `UNAUTHORIZED` 401, `FORBIDDEN_SCOPE` 403, `ORDER_NOT_FOUND`/`QUOTE_NOT_FOUND` 404, `IDEMPOTENCY_KEY_REUSED`/`CANCEL_NOT_ALLOWED` 409, `QUOTE_EXPIRED`/`CURSOR_EXPIRED` 410, `QUOTE_INFEASIBLE` 422, `RATE_LIMITED` 429 with `Retry-After`, `ORDER_DESK_DISABLED`/`FLOOR_UNAVAILABLE`/`ORDER_DESK_PAUSED` 503.
 
-**Webhooks** (off by default, `ORDER_WEBHOOKS_ENABLED=false`). Outbound calls from the server are an SSRF surface, so the URL is not agent-supplied. Filip sets it per agent key in the key configuration. HTTPS only, resolved address must not be private, loopback, or link-local, body is one `orderUpdate`, header `X-Brickworks-Signature: sha256=<HMAC of body with the agent's webhook secret>`, three retries with backoff (5, 30, 120 seconds), then the update is still available by polling. Delivery is at least once; receivers dedupe by `seq`.
+**Webhooks** (off by default, `ORDER_WEBHOOKS_ENABLED=false`). Outbound calls from the server are an SSRF surface, so the URL is not agent-supplied. Filip sets it per agent key in the key configuration. HTTPS only, resolved address must not be private, loopback, or link-local, body is one `orderUpdate` plus the virtual notice, header `X-Brickworks-Signature: sha256=<HMAC of body with the agent's webhook secret>`, three retries with backoff (5, 30, 120 seconds), then the update is still available by polling. Delivery is at least once; receivers dedupe by `seq`.
 
 ## Auth, rate limits, and caps
 
@@ -681,20 +686,23 @@ Comparison uses SHA-256 plus `timingSafeEqual`, as `secretMatches` already does 
 
 **Rate limits** (in-process sliding windows, same approach as `withinRate`, app.ts:633):
 
-| Bucket | Limit |
-| --- | --- |
-| Any call, per agent | 60 per minute |
-| `quote_vehicle`, per agent | 10 per minute |
-| `place_order`, per agent | 3 per minute, 20 per day |
-| Concurrent long polls or SSE streams, per agent | 2 |
-| Anonymous, per client IP (Fastify `trustProxy` on Replit) | 20 per minute |
-| Forecast worker, global | concurrency 1, queue 5, then `RATE_LIMITED` with `retryAfterSeconds` |
+| Bucket | Limit | Charged |
+| --- | --- | --- |
+| Failed auth or scope check, per client IP | 20 per minute | on each 401 or 403 (bad key, missing key, missing scope) |
+| Any call, per agent | 60 per minute | after auth, before validation (loose flood limit) |
+| Anonymous, per client IP (Fastify `trustProxy` on Replit) | 20 per minute | after auth, before validation (loose flood limit) |
+| `quote_vehicle`, per agent | 10 per minute | after validation and the kill switch |
+| `place_order`, per agent | 3 per minute, 20 per day | only when an order is about to be created (all windows or none) |
+| Concurrent long polls or SSE streams, per agent | 2 | while open |
+| Forecast worker, global | concurrency 1, queue 5, then `RATE_LIMITED` with `retryAfterSeconds` | per forecast |
+
+**Check order** (correction 38): kill switch, then auth and scope, then the loose flood limits, then strict input validation, then the desk checks (quote found and fresh, intake pause, feasibility, caps, idempotency replay), and only then the strict quote or place budget. A rejected request never spends the place budget, and a 429 never hides `VALIDATION_FAILED`, `ORDER_DESK_PAUSED` or `ORDER_DESK_DISABLED`.
 
 **Caps:** quantity 1 to 3 per order; 3 non-terminal orders per agent (overridable per key); 10 non-terminal agent orders on the floor (the engine allows 20; the rest stay for showcase and operator orders); update log retains 5,000 desk-wide and 500 per order; terminal orders kept 7 days, then summarized.
 
 ## Safety rules
 
-1. **Virtual everywhere.** Every response carries `virtual: true` and a disclaimer: "Virtual order in the Brickworks simulation. No payment, no physical vehicle, no shipment." Currency is the literal `BWC-VIRTUAL`.
+1. **Virtual everywhere.** Every response carries `virtual: true` and a disclaimer: "Virtual order in the Brickworks simulation. No payment, no physical vehicle, no shipment." That covers every success body, every error body (auth, validation, 404, 409, 410, 422, 429, 503 off, kill switch and paused), each SSE event, each webhook body, and MCP JSON-RPC envelopes (`result._meta` and `error.data`). Currency is the literal `BWC-VIRTUAL`.
 2. **Strict schemas.** Unknown keys are rejected, so payment, address, or contact fields cannot be smuggled in.
 3. **No PII stored or logged.** Logs contain agent id, order id, update type, and simulation time only.
 4. **Minimal authority.** The desk can issue only `order-agent-create` and `order-cancel`. Agents cannot set priority 1, cannot target stations or modules, and cannot affect other orders. The floor runs in manual mode with no provider calls.
@@ -998,7 +1006,7 @@ Places where this spec was wrong or underspecified, found while implementing on 
 3. **The replay digest excludes `at`, `seq` and forecast updates.** Wall times and re-forecast timing depend on worker latency, so only simulated content is compared.
 4. **Queue head is derived from audit events, not snapshot polling.** Polling misses transitions between steps and would not be replayable.
 5. **Forecast exactness needs a fixed 0.125 second real-time quantum** (`FLOOR_STEP_SECONDS`). Variable timer steps change event discretization, so the forked run would drift from the floor.
-6. **MCP schema failures surface as the SDK's `isError` text.** The SDK validates input before the handler runs. The REST mirror returns `VALIDATION_FAILED`.
+6. **(Superseded by correction 37.)** MCP schema failures first surfaced as the SDK's `isError` text, because the SDK validated input before the handler ran. MCP now returns the same `VALIDATION_FAILED` body as REST.
 7. **The delay reason `virtual-operator-hold` was added** so operator carrier holds are labeled honestly.
 8. **The reset event carries the active orders**, so the bridge can fail every affected agent order with `floor_reset`.
 9. **`AGENT_ORDER_CAP` and `FLOOR_FULL` map to HTTP 409**, because they are conflicts with current state rather than invalid input.
@@ -1028,3 +1036,6 @@ Places where this spec was wrong or underspecified, found while implementing on 
 33. **Test placement differs from the task list.** Persistence, restart and corrupt-file tests are in `tests/order-desk-server.test.ts`, because they need the Fastify floor. Desk service tests are in `tests/order-desk.test.ts`. Live floor stream tests are in `tests/order-desk-server.test.ts`, and web frame validation is in `tests/order-web-floor.test.ts`.
 34. **Soak comparison metric.** `tickProcessingMs` in `/api/health` measures visitor session ticks only, while the floor runs on its own timer. The 20 percent `tickProcessingMs` comparison therefore does not capture floor cost. The desk soak records memory, floor conservation, retention bounds and stream health instead.
 35. **The optional 3D order tag and carrier cue (task 17) are not implemented.** They were marked optional. The Orders tab covers the required items.
+36. **The virtual notice is on every agent-facing body, not just catalog, capabilities, quotes and order views** (QA Helper FAIL on PR #1, checklist item 11). The sketch left `virtualNotice` out of `listOrdersOutput`, `getOrderUpdatesOutput` and `orderDeskError`, and the wrapper outputs (`placeOrderOutput`, `getOrderOutput`, `cancelOrderOutput`) carried it only inside `order`. Safety rule 1 says every response. One helper, `withVirtualNotice` in `packages/contracts/src/orders.ts`, now adds `virtual: true` and the disclaimer. It is applied in `OrderDeskService.call` (every tool result for REST and MCP), `OrderDeskError.body()` (every error body), SSE events, webhook bodies and the order-updates resource. Parser, body-size and content-type failures on agent routes go through a route-level error handler, so they also return the notice. JSON-RPC envelopes carry it in `error.data` and `result._meta`, including the MCP transport's own 4xx bodies. The sketch schemas above now include `...virtualNotice`, and the contract rejects an error body without it. `tests/order-virtual-notice.test.ts` walks every REST route, every MCP tool, resources and transport errors, on success and on every error class.
+37. **MCP tool errors carry the `orderDeskError` body as JSON text in `content[0]`, not as `structuredContent`, and the desk validates tool input itself.** SDK clients validate `structuredContent` against the tool's success `outputSchema` even on `isError` results, so an error body in `structuredContent` made any client that had called `tools/list` throw instead of seeing the error. Separately, the SDK's own input validation returned plain text with no error code and no notice (correction 6). The server now replaces the SDK `tools/call` handler with one that calls `OrderDeskService.call` directly, which applies the same strict schemas, so MCP and REST return identical error bodies.
+38. **Rate limits are charged after auth, validation, the kill switch and the intake pause** (QA Helper observation on PR #1). The limiter ran before validation and the pause check, so rejected writes used up the 3 per minute place budget and a 429 could hide `VALIDATION_FAILED` or `ORDER_DESK_PAUSED`. The order is now: kill switch, auth and scope, the loose per-agent (60 per minute) or anonymous per-IP (20 per minute) window, validation, the desk checks, and then the strict budgets. Quotes are charged once the input is valid. Placements are charged through a `beforeCommit` hook that runs only when a new order is about to be created, and never for a replay or a refusal. The minute and day windows are charged all or nothing. Floods stay bounded: failed auth or scope checks (bad key, missing key, missing scope) count against a new per-IP window (`invalidAuthPerMinute`, 20), and valid keys sending invalid input still hit the per-agent window. Tests are in `tests/order-rate-limits.test.ts`.

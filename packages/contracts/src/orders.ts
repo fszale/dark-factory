@@ -78,7 +78,23 @@ export const virtualAmount = z
     currency: z.literal(VIRTUAL_CURRENCY),
   })
   .strict();
-const virtualNotice = { virtual: z.literal(true), disclaimer: z.string() };
+/**
+ * Safety rule 1: every agent-facing body says it is virtual. Success outputs, error bodies,
+ * SSE events and webhook payloads all carry these two fields at the top level.
+ */
+export const virtualNotice = { virtual: z.literal(true), disclaimer: z.literal(VIRTUAL_DISCLAIMER) };
+export const VIRTUAL_NOTICE = { virtual: true, disclaimer: VIRTUAL_DISCLAIMER } as const;
+export type VirtualNotice = typeof VIRTUAL_NOTICE;
+/** The one wrapper used by REST, MCP, SSE and errors so no response can miss the notice. */
+export function withVirtualNotice<T extends object>(body: T): T & VirtualNotice {
+  return { ...body, ...VIRTUAL_NOTICE };
+}
+/** True when a parsed JSON body carries the notice at the top level. */
+export function hasVirtualNotice(body: unknown): boolean {
+  if (!body || typeof body !== "object") return false;
+  const record = body as Record<string, unknown>;
+  return record.virtual === true && record.disclaimer === VIRTUAL_DISCLAIMER;
+}
 
 export const FEASIBILITY_CODES = [
   "MODEL_UNKNOWN",
@@ -418,11 +434,12 @@ export type PlaceOrderInput = z.infer<typeof placeOrderInput>;
 export const placeOrderOutput = z.object({
   order: orderView,
   replayed: z.boolean(),
+  ...virtualNotice,
 });
 
 // ---------- get_order / list_orders ----------
 export const getOrderInput = z.object({ orderId: agentOrderId }).strict();
-export const getOrderOutput = z.object({ order: orderView });
+export const getOrderOutput = z.object({ order: orderView, ...virtualNotice });
 export const listOrdersInput = z
   .object({
     status: z.array(orderStatus).max(13).optional(),
@@ -434,6 +451,7 @@ export type ListOrdersInput = z.infer<typeof listOrdersInput>;
 export const listOrdersOutput = z.object({
   orders: z.array(orderSummary),
   nextCursor: z.string().nullable(),
+  ...virtualNotice,
 });
 
 // ---------- cancel_order ----------
@@ -445,6 +463,7 @@ export const cancelOrderOutput = z.object({
   order: orderView,
   cancelled: z.boolean(),
   replayed: z.boolean(),
+  ...virtualNotice,
 });
 
 // ---------- get_order_updates ----------
@@ -510,6 +529,7 @@ export const getOrderUpdatesOutput = z.object({
   nextCursor: z.string(),
   hasMore: z.boolean(),
   oldestRetainedSeq: z.number().int(),
+  ...virtualNotice,
 });
 export type GetOrderUpdatesOutput = z.infer<typeof getOrderUpdatesOutput>;
 
@@ -541,6 +561,7 @@ export const orderDeskError = z.object({
     retryAfterSeconds: z.number().int().optional(),
     issues: z.array(feasibilityIssue).optional(),
   }),
+  ...virtualNotice,
 });
 export type OrderDeskErrorBody = z.infer<typeof orderDeskError>;
 export const ORDER_DESK_ERROR_HTTP: Record<OrderDeskErrorCode, number> = {

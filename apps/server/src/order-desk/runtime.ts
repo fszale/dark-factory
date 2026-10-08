@@ -6,7 +6,7 @@ import { runForecast, type ForecastRequest, type ForecastResult } from "../../..
 import { AgentKeyring, ForecastQueue, RateLimiter, type Agent } from "./auth.ts";
 import { resolveOrderDeskConfig, type Forecaster, type OrderDeskConfig, type OrderDeskOptions } from "./config.ts";
 import { OrderFloor } from "./floor.ts";
-import { disabledError } from "./http.ts";
+import { clientIp, disabledError } from "./http.ts";
 import { OrderDeskService } from "./service.ts";
 import { WebhookDispatcher } from "./webhooks.ts";
 
@@ -121,7 +121,8 @@ export class OrderDeskRuntime {
     const header = request.headers.authorization;
     if (header === undefined) return null;
     const agent = this.keyring.authenticate(Array.isArray(header) ? header[0] : header);
-    if (!agent) throw new OrderDeskError("UNAUTHORIZED", "The bearer key is not valid.");
+    // Bad keys count against the per-IP flood window; past it the caller gets 429 instead of 401.
+    if (!agent) throw this.limiter.rejected(clientIp(request), new OrderDeskError("UNAUTHORIZED", "The bearer key is not valid."));
     return agent;
   }
 

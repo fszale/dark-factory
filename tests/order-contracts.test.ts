@@ -91,7 +91,10 @@ describe("DF-ORDER-001 contracts", () => {
         source: "simulated",
       }).success,
     ).toBe(true);
-    expect(orderDeskError.safeParse({ error: { code: "QUOTE_EXPIRED", message: "Quote expired.", retryable: false } }).success).toBe(true);
+    const notice = { virtual: true, disclaimer: VIRTUAL_DISCLAIMER };
+    expect(orderDeskError.safeParse({ error: { code: "QUOTE_EXPIRED", message: "Quote expired.", retryable: false }, ...notice }).success).toBe(true);
+    // Safety rule 1: an error body without the virtual notice does not satisfy the contract.
+    expect(orderDeskError.safeParse({ error: { code: "QUOTE_EXPIRED", message: "Quote expired.", retryable: false } }).success).toBe(false);
   });
 
   it("rejects unknown keys, including payment, address and contact fields", () => {

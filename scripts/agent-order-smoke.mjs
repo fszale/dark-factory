@@ -209,6 +209,11 @@ try {
     assert.equal(foreign.isError, true);
     assert.match(JSON.stringify(foreign.structuredContent ?? foreign.content), /ORDER_NOT_FOUND/);
   });
+  check("on: MCP error body carries virtual:true and the disclaimer", () => {
+    const body = JSON.parse(foreign.content[0].text);
+    assert.equal(body.virtual, true);
+    assert.ok(body.disclaimer);
+  });
   await other.close();
 
   const statuses = [];
@@ -243,7 +248,15 @@ try {
   check("on: factory-sourced updates link factory event ids", () => assert.ok(factoryLinked > 0));
   check("on: get_order shows virtual carrier tracking legs", () => assert.ok(unit?.tracking?.legs?.length > 0));
   check("on: resource subscription delivered notifications/resources/updated", () => assert.ok(notifications > 0));
-  const shippedUpdate = (await call("get_order_updates", { orderId, limit: 100 })).updates.find((update) => update.status === "shipped" && update.type !== "estimate.revised");
+  const feed = await call("get_order_updates", { orderId, limit: 100 });
+  const listed = await call("list_orders", {});
+  check("on: list_orders and get_order_updates carry virtual:true and the disclaimer", () => {
+    for (const body of [feed, listed]) {
+      assert.equal(body.virtual, true);
+      assert.ok(body.disclaimer);
+    }
+  });
+  const shippedUpdate = feed.updates.find((update) => update.status === "shipped" && update.type !== "estimate.revised");
   summary.actualShipSimTime = shippedUpdate?.simTime ?? null;
   if (speed === 1)
     check("on: actual ship time equals quoted shipBySimTime (speed 1, no other inputs)", () => assert.equal(summary.actualShipSimTime, summary.quotedShipBySimTime));
@@ -251,7 +264,11 @@ try {
   const restOrder = await fetch(`${base}/api/agent/v1/orders/${orderId}`, { headers: { authorization: `Bearer ${token}` } });
   check("on: REST mirror returns the same order", () => assert.equal(restOrder.status, 200));
   const noKey = await fetch(`${base}/api/agent/v1/orders`);
-  check("on: REST list without a key is 401", () => assert.equal(noKey.status, 401));
+  const noKeyBody = await noKey.json();
+  check("on: REST list without a key is 401, with virtual:true in the error body", () => {
+    assert.equal(noKey.status, 401);
+    assert.equal(noKeyBody.virtual, true);
+  });
 
   // ---------- kill switch ----------
   const thrown = await json(await operator("kill-switch", { thrown: true }));
@@ -267,7 +284,12 @@ try {
   const freshMcp = await fetch(`${base}/mcp`, { method: "POST", headers: { "content-type": "application/json", accept: "application/json, text/event-stream" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "initialize", params: {} }) });
   check("kill switch: existing MCP session call blocked", () => assert.equal(mcpBlocked, true));
   check("kill switch: new MCP request 503", () => assert.equal(freshMcp.status, 503));
-  check("kill switch: REST 503", () => assert.equal(restBlocked.status, 503));
+  const restBlockedBody = await restBlocked.json();
+  check("kill switch: REST 503 ORDER_DESK_DISABLED, with virtual:true in the error body", () => {
+    assert.equal(restBlocked.status, 503);
+    assert.equal(restBlockedBody.error.code, "ORDER_DESK_DISABLED");
+    assert.equal(restBlockedBody.virtual, true);
+  });
   const released = await json(await operator("kill-switch", { thrown: false }));
   check("kill switch: released, desk active again", () => assert.deepEqual([released.killSwitch, released.active], [false, true]));
   const after = await connect(token);

@@ -42,16 +42,36 @@ export function requireScope(agent: Agent | null, scope: AgentScope | null) {
 export class SlidingWindows {
   private readonly hits = new Map<string, number[]>();
   constructor(private readonly now: () => number) {}
-  /** Records a hit when allowed; returns seconds until a slot frees when not. */
-  take(bucket: string, limit: number, windowMs: number): number | null {
+  private live(bucket: string, windowMs: number) {
     const now = this.now();
     const list = (this.hits.get(bucket) ?? []).filter((t) => now - t < windowMs);
-    if (list.length >= limit) {
-      this.hits.set(bucket, list);
-      return Math.max(1, Math.ceil((list[0] + windowMs - now) / 1000));
-    }
-    list.push(now);
     this.hits.set(bucket, list);
+    return list;
+  }
+  /** Seconds until a slot frees when the window is full, otherwise null. Records nothing. */
+  peek(bucket: string, limit: number, windowMs: number): number | null {
+    const list = this.live(bucket, windowMs);
+    if (list.length < limit) return null;
+    return Math.max(1, Math.ceil((list[0] + windowMs - this.now()) / 1000));
+  }
+  record(bucket: string) {
+    const list = this.hits.get(bucket) ?? [];
+    list.push(this.now());
+    this.hits.set(bucket, list);
+  }
+  /** Records a hit when allowed; returns seconds until a slot frees when not. */
+  take(bucket: string, limit: number, windowMs: number): number | null {
+    const retry = this.peek(bucket, limit, windowMs);
+    if (retry === null) this.record(bucket);
+    return retry;
+  }
+  /** All-or-nothing: records a hit in every window only when every window has room. */
+  takeAll(windows: Array<{ bucket: string; limit: number; windowMs: number }>): number | null {
+    for (const w of windows) {
+      const retry = this.peek(w.bucket, w.limit, w.windowMs);
+      if (retry !== null) return retry;
+    }
+    for (const w of windows) this.record(w.bucket);
     return null;
   }
   prune() {
@@ -60,8 +80,15 @@ export class SlidingWindows {
   }
 }
 
-export type LimitedCall = "quote_vehicle" | "place_order" | "other";
+/** Calls with a strict budget of their own, charged only when the request would otherwise proceed. */
+export type BudgetedCall = "quote_vehicle" | "place_order";
 
+/**
+ * Two layers. The loose layer (admit, rejected) runs before validation and protects against
+ * floods: anonymous calls per IP, authenticated calls per agent, failed auth per IP. The strict
+ * layer (charge) holds the quote and place budgets and is charged last, after auth, validation,
+ * the kill switch and the intake pause, so a rejected request never spends it.
+ */
 export class RateLimiter {
   private readonly windows: SlidingWindows;
   private readonly streams = new Map<string, number>();
@@ -71,18 +98,27 @@ export class RateLimiter {
   private fail(retry: number) {
     return new OrderDeskError("RATE_LIMITED", "Rate limit reached; retry later.", true, { retryAfterSeconds: retry });
   }
-  check(agent: Agent | null, ip: string, call: LimitedCall) {
-    if (!agent) {
-      const retry = this.windows.take(`anon:${ip}`, this.limits.anonymousPerMinute, 60_000);
-      if (retry !== null) throw this.fail(retry);
-      return;
-    }
-    let retry = this.windows.take(`agent:${agent.id}`, this.limits.perAgentPerMinute, 60_000);
-    if (retry === null && call === "quote_vehicle") retry = this.windows.take(`quote:${agent.id}`, this.limits.quotePerMinute, 60_000);
-    if (retry === null && call === "place_order") {
-      retry = this.windows.take(`place:${agent.id}`, this.limits.placePerMinute, 60_000);
-      if (retry === null) retry = this.windows.take(`place-day:${agent.id}`, this.limits.placePerDay, 24 * 60 * 60_000);
-    }
+  /** Loose flood limiter for every call that passed auth: per IP when anonymous, per agent otherwise. */
+  admit(agent: Agent | null, ip: string) {
+    const retry = agent
+      ? this.windows.take(`agent:${agent.id}`, this.limits.perAgentPerMinute, 60_000)
+      : this.windows.take(`anon:${ip}`, this.limits.anonymousPerMinute, 60_000);
+    if (retry !== null) throw this.fail(retry);
+  }
+  /** Counts a failed auth or scope check against the per-IP flood window; returns the error to send. */
+  rejected(ip: string, error: OrderDeskError): OrderDeskError {
+    const retry = this.windows.take(`invalid:${ip}`, this.limits.invalidAuthPerMinute, 60_000);
+    return retry === null ? error : this.fail(retry);
+  }
+  /** Strict budgets. Checks every window before recording any, so a refusal costs nothing. */
+  charge(agent: Agent, call: BudgetedCall) {
+    const retry =
+      call === "quote_vehicle"
+        ? this.windows.takeAll([{ bucket: `quote:${agent.id}`, limit: this.limits.quotePerMinute, windowMs: 60_000 }])
+        : this.windows.takeAll([
+            { bucket: `place:${agent.id}`, limit: this.limits.placePerMinute, windowMs: 60_000 },
+            { bucket: `place-day:${agent.id}`, limit: this.limits.placePerDay, windowMs: 24 * 60 * 60_000 },
+          ]);
     if (retry !== null) throw this.fail(retry);
   }
   /** Long polls and SSE streams share one per-agent concurrency budget. */

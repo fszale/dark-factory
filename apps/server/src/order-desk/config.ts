@@ -28,6 +28,8 @@ export interface RateLimits {
   placePerDay: number;
   concurrentStreams: number;
   anonymousPerMinute: number;
+  /** Failed auth or scope checks per client IP per minute (flood protection before validation). */
+  invalidAuthPerMinute: number;
   forecastQueue: number;
 }
 export const DEFAULT_RATE_LIMITS: RateLimits = {
@@ -37,6 +39,7 @@ export const DEFAULT_RATE_LIMITS: RateLimits = {
   placePerDay: 20,
   concurrentStreams: 2,
   anonymousPerMinute: 20,
+  invalidAuthPerMinute: 20,
   forecastQueue: 5,
 };
 

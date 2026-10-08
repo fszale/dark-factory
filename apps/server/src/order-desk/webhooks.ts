@@ -1,7 +1,7 @@
 import { createHmac } from "node:crypto";
 import { lookup } from "node:dns/promises";
 import { isIP } from "node:net";
-import type { OrderUpdate } from "../../../../packages/contracts/src/orders.ts";
+import { withVirtualNotice, type OrderUpdate } from "../../../../packages/contracts/src/orders.ts";
 import type { DeskLogger } from "../../../../packages/orders/src/desk.ts";
 
 export const WEBHOOK_SIGNATURE_HEADER = "X-Brickworks-Signature";
@@ -105,7 +105,7 @@ export class WebhookDispatcher {
       this.options.logger.warn({ orderId: update.orderId, seq: update.seq, reason: problem }, "order webhook blocked");
       return;
     }
-    const body = JSON.stringify(update);
+    const body = JSON.stringify(withVirtualNotice(update));
     let status: number | string;
     try {
       const response = await (this.options.fetch ?? fetch)(target.url, {

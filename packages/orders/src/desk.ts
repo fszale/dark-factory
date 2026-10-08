@@ -12,6 +12,7 @@ import {
   FLOOR_ID,
   TERMINAL_ORDER_STATUSES,
   VIRTUAL_DISCLAIMER,
+  withVirtualNotice,
   type AgentScope,
   type CancelOrderInput,
   type DeskOrderCard,
@@ -108,8 +109,9 @@ export class OrderDeskError extends Error {
     super(message);
     this.name = "OrderDeskError";
   }
+  /** The orderDeskError body, always with the virtual notice (safety rule 1). */
   body() {
-    return {
+    return withVirtualNotice({
       error: {
         code: this.code,
         message: this.message,
@@ -117,7 +119,7 @@ export class OrderDeskError extends Error {
         ...(this.extra.retryAfterSeconds !== undefined ? { retryAfterSeconds: this.extra.retryAfterSeconds } : {}),
         ...(this.extra.issues ? { issues: this.extra.issues } : {}),
       },
-    };
+    });
   }
 }
 
@@ -541,7 +543,12 @@ export class OrderDesk {
   }
 
   // ---------------------------------------------------------------- placement
-  placeOrder(agent: AgentIdentity, input: PlaceOrderInput): { order: OrderView; replayed: boolean } {
+  /**
+   * `beforeCommit` runs after every check has passed and just before a new order is created
+   * (never for a replay or a refusal). The server charges the place budget there; if it
+   * throws, nothing has changed.
+   */
+  placeOrder(agent: AgentIdentity, input: PlaceOrderInput, hooks: { beforeCommit?: () => void } = {}): { order: OrderView; replayed: boolean } {
     const fingerprint = JSON.stringify({ quoteId: input.quoteId, leadOption: input.leadOption, agentReference: input.agentReference ?? null });
     const replay = this.checkIdempotency(agent, input.idempotencyKey, "place", fingerprint);
     if (replay) return { order: this.view(this.state.orders[replay.orderId]), replayed: true };
@@ -577,6 +584,7 @@ export class OrderDesk {
     if (errors.some((i) => i.code === "FLOOR_ORDER_SLOTS_FULL"))
       throw new OrderDeskError("FLOOR_FULL", "The order floor has no free order slots right now.", true, { issues: errors, retryAfterSeconds: 60 });
     if (errors.length) throw new OrderDeskError("QUOTE_INFEASIBLE", "The quoted configuration is no longer feasible.", false, { issues: errors });
+    hooks.beforeCommit?.();
     const orderId = this.newId("ao");
     const intake: IntakeOrder = {
       orderId,
@@ -1178,7 +1186,7 @@ export class OrderDesk {
   }
 
   /** Newest first; the cursor is the placement sequence of the last order returned. */
-  listOrders(agent: AgentIdentity, input: Partial<ListOrdersInput>): { orders: OrderSummary[]; nextCursor: string | null } {
+  listOrders(agent: AgentIdentity, input: Partial<ListOrdersInput>): { orders: OrderSummary[]; nextCursor: string | null; virtual: true; disclaimer: typeof VIRTUAL_DISCLAIMER } {
     const limit = Math.min(50, Math.max(1, input.limit ?? 20));
     let before = Number.POSITIVE_INFINITY;
     if (input.cursor !== undefined) {
@@ -1192,7 +1200,7 @@ export class OrderDesk {
       .sort((a, b) => b.placementSeq - a.placementSeq);
     const page = matching.slice(0, limit);
     const snapshot = this.snapshotOrNull();
-    return {
+    return withVirtualNotice({
       orders: page.map((o) => {
         const view = this.view(o, snapshot);
         return {
@@ -1208,7 +1216,7 @@ export class OrderDesk {
         };
       }),
       nextCursor: matching.length > limit ? `p${page[page.length - 1].placementSeq}` : null,
-    };
+    });
   }
 
   // ---------------------------------------------------------------- update feed
@@ -1238,12 +1246,12 @@ export class OrderDesk {
     );
     const page = mine.slice(0, limit);
     const oldest = this.state.updates.find((u) => this.state.orders[u.orderId]?.agentId === agent.id);
-    return {
+    return withVirtualNotice({
       updates: structuredClone(page),
       nextCursor: `u${page.length ? page[page.length - 1].seq : Math.max(after, this.callerHighWater(agent, input.orderId, after))}`,
       hasMore: mine.length > limit,
       oldestRetainedSeq: oldest?.seq ?? this.state.seq,
-    };
+    });
   }
 
   /** With no new updates the cursor stays put, so a caller never skips its own future updates. */

@@ -1,9 +1,9 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { zodToJsonSchema } from "zod-to-json-schema";
-import { orderDeskError, VIRTUAL_DISCLAIMER, type OrderToolName, type OrderUpdate } from "../../../../packages/contracts/src/orders.ts";
+import { orderDeskError, VIRTUAL_DISCLAIMER, withVirtualNotice, type OrderToolName, type OrderUpdate } from "../../../../packages/contracts/src/orders.ts";
 import { OrderDeskError } from "../../../../packages/orders/src/desk.ts";
 import type { Agent } from "./auth.ts";
-import { clientIp, requestOrigin, sendDeskError } from "./http.ts";
+import { agentRouteErrorHandler, clientIp, requestOrigin, sendDeskError } from "./http.ts";
 import { TOOL_DEFINITIONS, type OrderDeskService } from "./service.ts";
 import type { OrderDeskRuntime } from "./runtime.ts";
 
@@ -88,7 +88,7 @@ export function registerRest(app: FastifyInstance, runtime: OrderDeskRuntime, se
     return value ? { ...body(request), idempotencyKey: value } : body(request);
   };
   const query = (request: FastifyRequest) => (request.query ?? {}) as Record<string, string>;
-  const options = { bodyLimit: AGENT_BODY_LIMIT };
+  const options = { bodyLimit: AGENT_BODY_LIMIT, errorHandler: agentRouteErrorHandler };
 
   app.get(`${REST_BASE}/catalog`, options, handle("list_vehicle_configs", () => ({})));
   app.get(`${REST_BASE}/capabilities`, options, handle("get_capabilities", () => ({})));
@@ -125,20 +125,24 @@ export function registerRest(app: FastifyInstance, runtime: OrderDeskRuntime, se
       };
     }),
   );
-  app.get(`${REST_BASE}/openapi.json`, async (request, reply) => {
+  app.get(`${REST_BASE}/openapi.json`, options, async (request, reply) => {
     if (!runtime.active()) return sendDeskError(reply, new OrderDeskError("ORDER_DESK_DISABLED", "The order desk is disabled.", true));
     reply.header("Access-Control-Allow-Origin", "*").header("Cache-Control", "public, max-age=300");
     return openApiDocument(`${runtime.config.publicBaseUrl ?? requestOrigin(request) ?? "http://localhost:3000"}`);
   });
 
   /** SSE: replays retained updates after Last-Event-ID, then streams live ones. */
-  app.get(`${REST_BASE}/orders/:orderId/events`, async (request, reply) => {
+  app.get(`${REST_BASE}/orders/:orderId/events`, options, async (request, reply) => {
     let release: (() => void) | null = null;
     try {
       const agent = runtime.authenticate(request);
       const orderId = (request.params as { orderId: string }).orderId;
-      service.ensureScope(agent, "order:read");
-      runtime.limiter.check(agent, clientIp(request), "other");
+      try {
+        service.ensureScope(agent, "order:read");
+      } catch (error) {
+        throw error instanceof OrderDeskError && error.code !== "ORDER_DESK_DISABLED" ? runtime.limiter.rejected(clientIp(request), error) : error;
+      }
+      runtime.limiter.admit(agent, clientIp(request));
       const desk = runtime.floor().desk;
       desk.getOrder(agent!, orderId);
       const header = request.headers["last-event-id"];
@@ -157,7 +161,7 @@ export function registerRest(app: FastifyInstance, runtime: OrderDeskRuntime, se
       const send = (update: OrderUpdate) => {
         if (update.seq <= after) return;
         after = update.seq;
-        res.write(`id: ${update.seq}\nevent: order-update\ndata: ${JSON.stringify(update)}\n\n`);
+        res.write(`id: ${update.seq}\nevent: order-update\ndata: ${JSON.stringify(withVirtualNotice(update))}\n\n`);
       };
       res.write(": brickworks order desk stream (virtual)\n\n");
       for (const update of backlog.updates) send(update);
@@ -188,6 +192,6 @@ export function registerRest(app: FastifyInstance, runtime: OrderDeskRuntime, se
   });
 
   // Any other path under the agent base is a JSON 404, never the SPA.
-  app.all(`${REST_BASE}/*`, async (_request, reply) => sendDeskError(reply, new OrderDeskError("ORDER_NOT_FOUND", "No such order desk route.")));
+  app.all(`${REST_BASE}/*`, options, async (_request, reply) => sendDeskError(reply, new OrderDeskError("ORDER_NOT_FOUND", "No such order desk route.")));
 }
 

@@ -2,12 +2,30 @@ import { randomUUID } from "node:crypto";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import { ErrorCode, isInitializeRequest, McpError, SubscribeRequestSchema, UnsubscribeRequestSchema } from "@modelcontextprotocol/sdk/types.js";
-import { TERMINAL_ORDER_STATUSES, type OrderToolName } from "../../../../packages/contracts/src/orders.ts";
+import {
+  CallToolRequestSchema,
+  ErrorCode,
+  isInitializeRequest,
+  McpError,
+  SubscribeRequestSchema,
+  UnsubscribeRequestSchema,
+  type JSONRPCMessage,
+} from "@modelcontextprotocol/sdk/types.js";
+import { TERMINAL_ORDER_STATUSES, withVirtualNotice, type OrderToolName } from "../../../../packages/contracts/src/orders.ts";
 import type { Agent } from "./auth.ts";
 import { ORDERING_GUIDE } from "./guide.ts";
 import { OrderDeskError } from "../../../../packages/orders/src/desk.ts";
-import { clientIp, disabledError, requestOrigin, sendDeskError, toDeskError } from "./http.ts";
+import {
+  agentRouteErrorHandler,
+  clientIp,
+  disabledError,
+  jsonRpcError,
+  noticeOnErrorResponses,
+  requestOrigin,
+  sendDeskError,
+  toDeskError,
+  withRpcNotice,
+} from "./http.ts";
 import { AGENT_BODY_LIMIT } from "./rest.ts";
 import type { OrderDeskRuntime } from "./runtime.ts";
 import { TOOL_DEFINITIONS, type CallContext } from "./service.ts";
@@ -26,8 +44,12 @@ interface McpSession {
   unsubscribe: () => void;
 }
 
-const jsonRpcError = (reply: FastifyReply, status: number, code: number, message: string) =>
-  reply.code(status).send({ jsonrpc: "2.0", error: { code, message }, id: null });
+/** Every JSON-RPC message the server sends (results, errors) carries the virtual notice. */
+class VirtualNoticeTransport extends StreamableHTTPServerTransport {
+  override send(message: JSONRPCMessage, options?: Parameters<StreamableHTTPServerTransport["send"]>[1]) {
+    return super.send(withRpcNotice(message), options);
+  }
+}
 
 /** Hosts and origins allowed on /mcp (DNS rebinding protection required by Streamable HTTP). */
 export function hostAllowed(host: string | undefined, publicBaseUrl: string | null) {
@@ -91,7 +113,32 @@ export class McpEndpoint {
       { name: "brickworks-order-desk", title: "Brickworks order desk (virtual)", version: "1.0.0" },
       { instructions: ORDERING_GUIDE },
     );
+    /** One path for every tool call: service.call validates, so all failures share the orderDeskError body. */
+    const runTool = async (name: string, args: unknown, signal: AbortSignal, progressToken: string | number | undefined, sendNotification: (n: never) => Promise<void>) => {
+      const ctx: CallContext = {
+        ...base,
+        signal,
+        onProgress:
+          progressToken === undefined
+            ? undefined
+            : (progress, message) =>
+                void sendNotification({ method: "notifications/progress", params: { progressToken, progress, total: 1, message } } as never).catch(() => undefined),
+      };
+      try {
+        const tool = TOOL_DEFINITIONS.find((t) => t.name === name);
+        if (!tool) throw new OrderDeskError("VALIDATION_FAILED", `Unknown tool ${String(name).slice(0, 64)}.`);
+        const result = await service.call(tool.name, args, ctx);
+        return { content: [{ type: "text" as const, text: JSON.stringify(result) }], structuredContent: result };
+      } catch (error) {
+        // The orderDeskError body (with the virtual notice) travels as JSON text, not
+        // structuredContent: SDK clients validate structuredContent against the tool's success
+        // outputSchema even on isError results, which would turn every desk error into a throw.
+        const body = toDeskError(error).body();
+        return { isError: true, content: [{ type: "text" as const, text: JSON.stringify(body) }] };
+      }
+    };
     for (const tool of TOOL_DEFINITIONS) {
+      // Registered for tools/list (schemas and annotations); calls go through the handler below.
       server.registerTool(
         tool.name,
         {
@@ -101,29 +148,15 @@ export class McpEndpoint {
           outputSchema: tool.output as never,
           annotations: { readOnlyHint: tool.readOnly, idempotentHint: tool.idempotent, destructiveHint: false, openWorldHint: false },
         },
-        (async (args: unknown, extra: { signal: AbortSignal; _meta?: { progressToken?: string | number }; sendNotification: (n: never) => Promise<void> }) => {
-          const token = extra._meta?.progressToken;
-          const ctx: CallContext = {
-            ...base,
-            signal: extra.signal,
-            onProgress:
-              token === undefined
-                ? undefined
-                : (progress, message) =>
-                    void extra
-                      .sendNotification({ method: "notifications/progress", params: { progressToken: token, progress, total: 1, message } } as never)
-                      .catch(() => undefined),
-          };
-          try {
-            const result = (await service.call(tool.name as OrderToolName, args, ctx)) as Record<string, unknown>;
-            return { content: [{ type: "text", text: JSON.stringify(result) }], structuredContent: result };
-          } catch (error) {
-            const body = toDeskError(error).body();
-            return { isError: true, content: [{ type: "text", text: JSON.stringify(body) }], structuredContent: body };
-          }
-        }) as never,
+        (async (args: unknown, extra: { signal: AbortSignal; _meta?: { progressToken?: string | number }; sendNotification: (n: never) => Promise<void> }) =>
+          runTool(tool.name, args, extra.signal, extra._meta?.progressToken, extra.sendNotification)) as never,
       );
     }
+    // Replaces the SDK's tools/call handler so the SDK's own input validation (plain-text errors
+    // with no virtual notice) never runs; service.call applies the same strict schemas.
+    server.server.setRequestHandler(CallToolRequestSchema, async (request, extra) =>
+      runTool(request.params.name, request.params.arguments ?? {}, extra.signal, request.params._meta?.progressToken, extra.sendNotification as never),
+    );
     const json = (uri: URL, value: unknown) => ({ contents: [{ uri: uri.href, mimeType: "application/json", text: JSON.stringify(value) }] });
     const read = async (tool: OrderToolName, input: unknown) => {
       try {
@@ -160,7 +193,7 @@ export class McpEndpoint {
       async (uri, variables) => {
         const orderId = String(variables.orderId);
         await read("get_order", { orderId });
-        return json(uri, { orderId, updates: this.runtime.floor().desk.recentUpdates(orderId, 50) });
+        return json(uri, withVirtualNotice({ orderId, updates: this.runtime.floor().desk.recentUpdates(orderId, 50) }));
       },
     );
     server.server.registerCapabilities({ resources: { subscribe: true, listChanged: false } });
@@ -195,6 +228,14 @@ export class McpEndpoint {
       method: ["GET", "POST", "DELETE"],
       url: "/mcp",
       bodyLimit: AGENT_BODY_LIMIT,
+      // Parser, size and content-type failures as JSON-RPC errors, with the notice in error.data.
+      errorHandler: (error, request, reply) => {
+        const status = typeof error.statusCode === "number" ? error.statusCode : 500;
+        if (status === 413) return jsonRpcError(reply, 413, -32000, "Request body too large (64 KB limit).");
+        if (status === 415) return jsonRpcError(reply, 415, -32000, "Unsupported Media Type: Content-Type must be application/json.");
+        if (status >= 400 && status < 500) return jsonRpcError(reply, 400, -32700, "Parse error: Invalid JSON.");
+        return agentRouteErrorHandler(error, request, reply);
+      },
       handler: async (request: FastifyRequest, reply: FastifyReply) => {
         if (!this.runtime.active()) return sendDeskError(reply, disabledError());
         const base = this.runtime.config.publicBaseUrl;
@@ -203,7 +244,8 @@ export class McpEndpoint {
         let agent: Agent | null;
         try {
           agent = this.runtime.authenticate(request);
-          if (!agent && !this.runtime.config.anonRead) throw new OrderDeskError("UNAUTHORIZED", "A bearer agent key is required.");
+          if (!agent && !this.runtime.config.anonRead)
+            throw this.runtime.limiter.rejected(clientIp(request), new OrderDeskError("UNAUTHORIZED", "A bearer agent key is required."));
         } catch (error) {
           return sendDeskError(reply, error);
         }
@@ -217,6 +259,7 @@ export class McpEndpoint {
           session.lastSeen = Date.now();
           if (request.method === "DELETE") {
             reply.hijack();
+            noticeOnErrorResponses(reply.raw);
             await session.transport.handleRequest(request.raw, reply.raw, request.body);
             await this.close(session);
             return;
@@ -242,7 +285,7 @@ export class McpEndpoint {
             pending: new Map(),
             unsubscribe: () => undefined,
           };
-          const transport = new StreamableHTTPServerTransport({
+          const transport = new VirtualNoticeTransport({
             sessionIdGenerator: () => randomUUID(),
             onsessioninitialized: (id) => {
               created.id = id;
@@ -256,6 +299,7 @@ export class McpEndpoint {
           session = created;
         }
         reply.hijack();
+        noticeOnErrorResponses(reply.raw);
         await session.transport.handleRequest(request.raw, reply.raw, request.body);
       },
     });

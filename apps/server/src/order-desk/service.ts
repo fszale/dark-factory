@@ -22,6 +22,7 @@ import {
   quoteVehicleInput,
   quoteVehicleOutput,
   VIRTUAL_DISCLAIMER,
+  withVirtualNotice,
   type AgentScope,
   type GetCapabilitiesOutput,
   type GetOrderUpdatesOutput,
@@ -33,7 +34,7 @@ import { zoneList } from "../../../../packages/orders/src/carrier.ts";
 import { OrderDesk, OrderDeskError } from "../../../../packages/orders/src/desk.ts";
 import { ORDER_MAX_QUANTITY } from "../../../../packages/orders/src/feasibility.ts";
 import { LEAD_OPTION_PRIORITY } from "../../../../packages/orders/src/pricing.ts";
-import { requireScope, type Agent, type LimitedCall, type RateLimiter } from "./auth.ts";
+import { requireScope, type Agent, type RateLimiter } from "./auth.ts";
 import type { OrderDeskConfig } from "./config.ts";
 import type { OrderFloor } from "./floor.ts";
 
@@ -84,9 +85,6 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
   description: `${ORDER_TOOL_SUMMARIES[tool.name as OrderToolName]} Virtual only: no payment, no physical vehicle, no shipment.`,
 }));
 
-const limitedCall = (name: OrderToolName): LimitedCall =>
-  name === "quote_vehicle" || name === "place_order" ? name : "other";
-
 export interface ServiceRuntime {
   config: OrderDeskConfig;
   limiter: RateLimiter;
@@ -135,9 +133,10 @@ export class OrderDeskService {
         rateLimits: {
           anyCallPerAgent: `${limits.perAgentPerMinute}/min`,
           quoteVehicle: `${limits.quotePerMinute}/min`,
-          placeOrder: `${limits.placePerMinute}/min, ${limits.placePerDay}/day`,
+          placeOrder: `${limits.placePerMinute}/min, ${limits.placePerDay}/day, charged only for orders created`,
           concurrentStreams: String(limits.concurrentStreams),
           anonymousPerIp: `${limits.anonymousPerMinute}/min`,
+          failedAuthPerIp: `${limits.invalidAuthPerMinute}/min`,
         },
       },
       transports: this.transportUrls(ctx),
@@ -154,29 +153,45 @@ export class OrderDeskService {
     requireScope(agent, scope);
   }
 
-  /** Validates input with the tool's strict schema, authorizes, rate limits, then runs the call. */
-  async call(name: OrderToolName, raw: unknown, ctx: CallContext): Promise<unknown> {
+  /**
+   * Kill switch and auth or scope first (failures count only against the per-IP flood window),
+   * then the loose per-agent or per-IP limiter, then strict input validation. The strict quote
+   * and place budgets are charged last: quotes once the input is valid, placements only when an
+   * order is about to be created. Every result carries the virtual notice.
+   */
+  async call(name: OrderToolName, raw: unknown, ctx: CallContext): Promise<Record<string, unknown>> {
     const tool = TOOL_DEFINITIONS.find((t) => t.name === name);
     if (!tool) throw new OrderDeskError("VALIDATION_FAILED", `Unknown tool ${name}.`);
-    this.ensureScope(ctx.agent, ORDER_TOOL_SCOPES[name]);
-    this.runtime.limiter.check(ctx.agent, ctx.ip, limitedCall(name));
+    try {
+      this.ensureScope(ctx.agent, ORDER_TOOL_SCOPES[name]);
+    } catch (error) {
+      if (error instanceof OrderDeskError && (error.code === "UNAUTHORIZED" || error.code === "FORBIDDEN_SCOPE"))
+        throw this.runtime.limiter.rejected(ctx.ip, error);
+      throw error;
+    }
+    this.runtime.limiter.admit(ctx.agent, ctx.ip);
     const parsed = tool.input.safeParse(raw ?? {});
     if (!parsed.success) {
       const first = parsed.error.issues[0];
       throw new OrderDeskError("VALIDATION_FAILED", `Invalid input${first ? ` at ${first.path.join(".") || "(root)"}: ${first.message}` : "."}`.slice(0, 300));
     }
-    const input = parsed.data;
+    return withVirtualNotice((await this.dispatch(name, parsed.data, ctx)) as object) as Record<string, unknown>;
+  }
+
+  private async dispatch(name: OrderToolName, input: any, ctx: CallContext): Promise<unknown> {
     const agent = ctx.agent!;
     const desk = this.desk();
+    const limiter = this.runtime.limiter;
     switch (name) {
       case "list_vehicle_configs":
         return listVehicleConfigs();
       case "get_capabilities":
         return this.capabilities(ctx);
       case "quote_vehicle":
+        limiter.charge(agent, "quote_vehicle");
         return desk.quote(agent, input, ctx.onProgress);
       case "place_order":
-        return desk.placeOrder(agent, input);
+        return desk.placeOrder(agent, input, { beforeCommit: () => limiter.charge(agent, "place_order") });
       case "get_order":
         return { order: desk.getOrder(agent, input.orderId) };
       case "list_orders":

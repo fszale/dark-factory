@@ -19,7 +19,9 @@ async function connect(url: string, key?: string) {
   return client;
 }
 
-type ToolResult = { structuredContent?: Record<string, unknown>; isError?: boolean };
+type ToolResult = { structuredContent?: Record<string, unknown>; isError?: boolean; content?: Array<{ type: string; text?: string }> };
+/** Tool errors carry the orderDeskError body as JSON text (see spec correction 37). */
+const errorBody = (result: ToolResult) => JSON.parse(result.content?.[0]?.text ?? "{}") as { error: { code: string }; virtual?: boolean };
 
 describe("DF-ORDER-001 MCP end to end (task 12)", () => {
   it("orders one robotaxi over MCP on seed 42 balanced and observes every status through delivered", async () => {
@@ -43,7 +45,8 @@ describe("DF-ORDER-001 MCP end to end (task 12)", () => {
       expect((caps.structuredContent as { transports: { mcp: string } }).transports.mcp).toBe(`${url}/mcp`);
       const anonQuote = (await anonymous.callTool({ name: "quote_vehicle", arguments: { config: { modelId: "robotaxi-gold-two-seat" }, quantity: 1, destinationZone: "zone-local" } })) as ToolResult;
       expect(anonQuote.isError).toBe(true);
-      expect((anonQuote.structuredContent as { error: { code: string } }).error.code).toBe("UNAUTHORIZED");
+      expect(errorBody(anonQuote).error.code).toBe("UNAUTHORIZED");
+      expect(errorBody(anonQuote).virtual).toBe(true);
       // Schema rejects payment-like fields before the desk sees them.
       const smuggled = (await client.callTool({ name: "place_order", arguments: { quoteId: "aq-0000000000", leadOption: "standard", idempotencyKey: "smuggle-01", payment: { card: "1" } } })) as ToolResult;
       expect(smuggled.isError).toBe(true);
@@ -113,7 +116,7 @@ describe("DF-ORDER-001 MCP end to end (task 12)", () => {
       // 9. Another agent cannot read it.
       const peek = (await other.callTool({ name: "get_order", arguments: { orderId: order.orderId } })) as ToolResult;
       expect(peek.isError).toBe(true);
-      expect((peek.structuredContent as { error: { code: string } }).error.code).toBe("ORDER_NOT_FOUND");
+      expect(errorBody(peek).error.code).toBe("ORDER_NOT_FOUND");
       // 10. Rebuild the desk from the floor archive; the simulated update log hash matches.
       advance(0);
       const rebuilt = rebuildFromFloorArchive(dataDir, runtime.floor().sim.snapshot().time);
