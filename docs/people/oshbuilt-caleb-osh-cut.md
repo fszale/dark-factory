@@ -27,15 +27,15 @@ Related spec: [DF-SHOP-001, shop-as-MCP sourcing](../plans/shop-mcp-sourcing.md)
 | Lead time | Standard lead time cut from five days to two for simple parts in late 2024; paid rush dropped 75%, revenue growth accelerated 100%, 2025 margin was a record (his numbers). | [Digital-first manufacturing](https://www.thefabricator.com/thefabricator/blog/lasercutting/the-potential-of-digital-first-manufacturing) |
 | Public contact | support@oshcut.com, quote@oshcut.com, 801-850-7584 | [About](https://www.oshcut.com/about-osh-cut), [oshcut.com](https://www.oshcut.com/) |
 
-## API and MCP status (as of 2026-10-08, 12:05 AM ET)
+## API and MCP status (as of 2026-10-09, 10:56 AM ET)
 
 | Item | Status | Evidence |
 | --- | --- | --- |
 | Internal quote, lead time, and DFM APIs | **Real.** They power the oshcut.com web app. Not publicly documented. | "The MCP just ties into our existing quote, lead, and DFM APIs." ([post](https://x.com/OSHBuilt/status/2107243952642691485)). A developer replied "I don't see any way to use this API publically?" ([post](https://x.com/10_X_eng/status/2107244803411071487)) |
-| OSH Cut MCP server | **Test only, not published.** Used by Caleb with Claude to design a swingset, a brontosaurus, and a firepit housing, each ending in an orderable cart. | "OSH Cut's test MCP server" ([post](https://x.com/OSHBuilt/status/2107600784850636954)); "Sorry, MCP isn't published yet." ([post](https://x.com/OSHBuilt/status/2107246239398101006)) |
-| Publication date | **Announced, not shipped.** | "We'll publish it within a week." (2026-10-07, 9:56 AM ET, [post](https://x.com/OSHBuilt/status/2107832476970418580)) |
-| Public docs on oshcut.com | None found. `/mcp`, `/api`, `/developers`, `/docs`, `/llms.txt`, `/.well-known/mcp.json` all returned 404 on 2026-10-08. Sitemap has no API or MCP page. | Direct HTTP check from the box |
-| Scope of DFM | Per-part manufacturability for sheet and tube. Not structural engineering, not assembly. | "Our MCP says whether it can make the parts, and how, but not structural engineering." ([post](https://x.com/OSHBuilt/status/2107662423822094678)); "Assembly is harder. Accurate component-level DFM is easier." ([post](https://x.com/OSHBuilt/status/2107121347910640065)) |
+| OSH Cut MCP server | **Still not public.** Caleb now calls it "OSH Cut's new MCP" after more Claude demos, but oshcut.com still has no public endpoint. | "I tested Claude with OSH Cut's new MCP" ([2026-10-08, 3:53 PM ET](https://x.com/OSHBuilt/status/2108284738121465978)); earlier "Sorry, MCP isn't published yet." ([post](https://x.com/OSHBuilt/status/2107246239398101006)) |
+| Publication date | **Still pending.** Promised "within a week" of 2026-10-07; on 2026-10-08 night he said DFM APIs are "releasing them soon." | ([within a week](https://x.com/OSHBuilt/status/2107832476970418580)); ([releasing soon](https://x.com/OSHBuilt/status/2108349510619652220)) |
+| Public docs on oshcut.com | Still none. `/mcp`, `/api`, `/developers`, `/docs`, `/llms.txt`, `/.well-known/mcp.json`, `/mcp.json`, `/agents.json` all 404 on 2026-10-09. | Direct HTTP check from the box |
+| Scope of DFM | Per-part manufacturability for sheet and tube. Not structural engineering, not assembly. Simple designs "solved"; assemblies are not. | "Simple designs are solved. Assemblies aren't." ([post](https://x.com/OSHBuilt/status/2108284738121465978)); structural limit ([post](https://x.com/OSHBuilt/status/2107662423822094678)) |
 
 ## Key ideas, with exact quotes
 
@@ -103,6 +103,64 @@ All times ET. Quotes are copied verbatim from the linked posts, including origin
 - Design behavior: "Best pushback so far. Assumes people will change the way they design." ([post](https://x.com/OSHBuilt/status/2108042809349742929))
 - Helpers wanted: "I'd love to see someone help shops plug into this environment" ([post](https://x.com/OSHBuilt/status/2108010991720251564))
 
+### 8. New posts since tracker start (2026-10-08 afternoon through 2026-10-09 morning)
+
+#### Productized manufacturing lanes, not another broker (2026-10-08, 10:22 AM ET)
+
+[x.com/OSHBuilt/status/2108201450279154013](https://x.com/OSHBuilt/status/2108201450279154013). About 7.1K views, 120 likes, 56 bookmarks at capture.
+
+> This is an exciting future. A Cambrian explosion of new designs, enabled by a relatively small set of scaled, agent-friendly manufacturing businesses.
+>
+> Under the hood, the buildout is less hyped and sexy. It requires manufacturers that can crank out parts, and that's very much NOT an AI play. At least, not yet.
+>
+> Manufacturing processes must be highly productized and scalable, so that APIs can provide first-principles DFM that matches reality. When parts are ordered, they have to just flow.
+>
+> We need dozens of productized manufacturing "lanes." Today, OSH Cut and a few other newer manufactures provide sheet metal in this productized way. But we need probably a dozen additional lanes for different types of CNC machining, tolerance requirements, mold creation, textiles, plastics, etc.
+>
+> This isn't going to be created by some new AI venture, it'll be a bunch of factories operated by people. It's machine maintenance, capacity management, training, hiring, customer support, risk management, marketing, shipping. It's a decades-long grind.
+>
+> The AI-friendly API layer is a tiny and comparatively easy component of what makes the whole engine function.
+>
+> So if you believe that what I've described is possible and likely, the best way to participate is not to write yet another API broker catalog. It's to identify a productizeable manufacturing service that doesn't exist yet, build it, serve people directly, tie in APIs, and participate in the coming boom.
+
+Follow-on reply in the same thread ([post](https://x.com/OSHBuilt/status/2108202950611116509)): "And if for some reason the AI boom doesn't revolutionize design the way we all thought it would... well then, you've created a great, profitable, scalable manufacturing business in an era of deep need. Success."
+
+#### "New MCP" demo post (2026-10-08, 3:53 PM ET)
+
+[x.com/OSHBuilt/status/2108284738121465978](https://x.com/OSHBuilt/status/2108284738121465978). About 2.7K views, 95 likes, 22 bookmarks at capture.
+
+> Imagine a world where you design by chatting with an AI agent, and finished parts show up on your doorstep in 24 hours.
+>
+> Stop imagining, this is already possible! I didn't know it until yesterday, but I tested Claude with OSH Cut's new MCP, and it works better than I could have imagined.
+>
+> The unlock is two-fold
+>
+> 1. Agents need a manufacturer that can provide real, first-principles DFM instantly, through APIs. This is critical, because agents today make design misrakes. An API that reports them allows the agent to iterate. This is a massive unlock.
+>
+> OSH Cut does this, but so far we only support sheet metal and tube. We need more.
+>
+> 2. Manufacturers need to be set up to handle high mix jobs at scale. Again, OSH Cut does this, though at 100 percent growth year over year, we may bump into capacity constraints. We are expanding capacity as fast as we can.
+>
+> As more productized services become fully supported and accessible via API, it's going to change how things are designed. I wouldn't have said this last week, but what I saw Claude + OSH Cut accomplish together in the last few days opened my eyes.
+>
+> Simple designs are solved. Assemblies aren't. Still lots of work to do.
+
+(Spelling "misrakes" and "manufactures" above is Caleb's original text.)
+
+#### Feedback loop / DFM APIs "releasing soon" (2026-10-08, 8:11 PM ET)
+
+[x.com/OSHBuilt/status/2108349510619652220](https://x.com/OSHBuilt/status/2108349510619652220). About 1.9K views, 58 likes at capture.
+
+> AI is great at software because it gets immediate feedback. Does it work, or not? Fast feedback means fast improvement.
+>
+> AI will become good at physical design for the same reason. It will accelerate when it can ask an actual factory whether the part it just designed can be made.
+>
+> OSH Cut's DFM APIs prove this. It's already amazing, and it's just getting started. Stay tuned, we are releasing them soon.
+
+#### Skipped
+
+- 2026-10-09 morning RT of @c0nst linking an article titled "Stuck at $3 Million" ([post](https://x.com/OSHBuilt/status/2108566448792859061)): not on manufacturing automation / MCP / dark factories.
+
 ## Notable replies and quotes on the thread
 
 | Who | Point | Link |
@@ -134,7 +192,7 @@ All times ET. Quotes are copied verbatim from the linked posts, including origin
 
 ## Watch list
 
-- OSH Cut MCP public release (promised "within a week" of 2026-10-07). When it ships, record the endpoint, auth model, tool names, and any terms of use here, then decide whether DF-SHOP-001 phase 3 can run against it read-only.
+- OSH Cut MCP / DFM API public release (promised "within a week" of 2026-10-07; on 2026-10-08 he said "releasing them soon"). Still 404 on oshcut.com as of 2026-10-09. When it ships, record the endpoint, auth model, tool names, and any terms of use here, then decide whether DF-SHOP-001 phase 4 can run against it read-only.
 - Any OSH Cut public API docs or OpenAPI spec.
 - Caleb's next Fabricator column, likely on agentic design.
 - Whether OSH Cut adds outcome history (on-time rate, defect rate) to what the MCP exposes.
@@ -144,3 +202,5 @@ All times ET. Quotes are copied verbatim from the linked posts, including origin
 Append new entries at the bottom. Format: `YYYY-MM-DD (ET): what changed, with links`.
 
 - 2026-10-08 (ET): Started tracking after the thesis post ([link](https://x.com/OSHBuilt/status/2107956520172528000)). Read about 70 of Caleb's posts from 2026-10-02 to 2026-10-07 (built-in X read tools), the thread's notable replies and quotes, oshcut.com, and The Fabricator columns. Findings: internal quote, lead, and DFM APIs are real but undocumented publicly; the MCP is a test server with publication promised within a week of 2026-10-07; no public docs on oshcut.com; no evidence of lights-out production. Added [DF-SHOP-001](../plans/shop-mcp-sourcing.md).
+
+- 2026-10-09 (ET): Weekday watch (prior scheduled run on 2026-10-08 failed). New relevant posts since tracker start: productized "lanes" / anti-broker call ([link](https://x.com/OSHBuilt/status/2108201450279154013) + [follow-on](https://x.com/OSHBuilt/status/2108202950611116509)); "new MCP" Claude demo and high-mix unlock ([link](https://x.com/OSHBuilt/status/2108284738121465978)); DFM-as-feedback-loop with "releasing them soon" ([link](https://x.com/OSHBuilt/status/2108349510619652220)). Skipped RT of "Stuck at $3 Million". Re-checked oshcut.com MCP/API paths: still 404. Updated API/MCP status table and DF-SHOP-001 notes on productized lanes.

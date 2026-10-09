@@ -21,6 +21,8 @@ He endorsed a reply's shorthand for it: '"Every shop is an API endpoint" has a n
 
 He is clear that the protocol matters less than the data: "MCP is optional. I think the API layer and rich DFM information are the critical components." ([post](https://x.com/OSHBuilt/status/2107970058375008597))
 
+On 2026-10-08 he sharpened the buildout: the hard part is productized manufacturing "lanes" (sheet metal, CNC, molds, textiles, plastics, and more), not another API broker catalog. The AI-friendly API layer is "a tiny and comparatively easy component" next to running factories ([post](https://x.com/OSHBuilt/status/2108201450279154013)). He also restated the feedback-loop thesis: agents get good at physical design when they can ask a real factory whether a part can be made ([post](https://x.com/OSHBuilt/status/2108349510619652220)).
+
 Full notes, quotes, and counterpoints are in the [people tracker](../people/oshbuilt-caleb-osh-cut.md).
 
 ## What is real and what is proposed
@@ -29,7 +31,7 @@ Full notes, quotes, and counterpoints are in the [people tracker](../people/oshb
 | --- | --- | --- |
 | Instant DFM, quote, and lead time for sheet and tube parts at OSH Cut | **Real, in production** | Web app at oshcut.com. Backed by internal APIs. |
 | OSH Cut internal quote, lead, and DFM APIs | **Real, not public** | Caleb: "The MCP just ties into our existing quote, lead, and DFM APIs." No public docs found on 2026-10-08. |
-| OSH Cut MCP server | **Test only** | Demos: swingset (about 5 minutes), brontosaurus (30 minutes), firepit housing. Publication announced "within a week" on 2026-10-07. |
+| OSH Cut MCP server | **Still not public (2026-10-09)** | Demos continue (Claude + "new MCP"). Caleb says DFM APIs are "releasing them soon." oshcut.com `/mcp` and related paths still 404. |
 | A standard shop MCP schema across shops | **Does not exist** | Nobody has published one that we found. The sketch below is our draft, not a standard. |
 | Brickworks as a buyer of shop parts | **Proposed** | This spec. |
 | Brickworks as a shop that exposes its own MCP | **Proposed, virtual only** | Seller-side counterpart spec: [DF-ORDER-001](vehicle-order-mcp.md). Virtual orders against the simulated factory; no payments or shipping. A real-plant seller endpoint stays out of scope until there is a physical plant. |
@@ -195,7 +197,8 @@ No application code in this commit.
 - **Security.** Auth, scoping, and server vetting; standard interfaces are a standard attack surface ([post](https://x.com/teewealthdev/status/2107964349256225003)). Compliance regimes such as CMMC level 2 need authenticated access ([post](https://x.com/C_lxndr/status/2107973856518648072)).
 - **MCP versus OpenAPI or agent skills.** Several replies argue a public OpenAPI spec plus a key is enough. This spec stays protocol neutral.
 - **Concentration.** Caleb predicts fewer, larger shops. Others expect tooling to let small shops publish their own endpoints. Brickworks does not need to pick a side to run the experiment.
-- **Assembly.** Per-part DFM is the easy half. Joint count, welding, and fixturing are not covered by any shop endpoint we found.
+- **Assembly.** Per-part DFM is the easy half. Joint count, welding, and fixturing are not covered by any shop endpoint we found. Caleb (2026-10-08): "Simple designs are solved. Assemblies aren't."
+- **Lanes vs brokers.** Caleb argues participation means building a productizable manufacturing service and tying in APIs, not writing another API broker catalog ([post](https://x.com/OSHBuilt/status/2108201450279154013)). Brickworks stays a buyer + virtual seller experiment; it should not become a shop directory.
 
 ## Out of scope
 
