@@ -1,0 +1,34 @@
+{
+  "kind": "brickworks-agent-order-scenario",
+  "version": 1,
+  "description": "An operator assembly outage hits a scheduled agent order before joining. The order goes at risk, its estimate is revised, risk clears after the site repair, and it is still delivered.",
+  "floor": { "scenario": "balanced", "seed": 42 },
+  "agents": [{ "id": "test-agent", "label": "Test Agent", "scopes": ["quote", "order:write", "order:read"] }],
+  "steps": [
+    {
+      "at": 0,
+      "agent": "test-agent",
+      "tool": "quote_vehicle",
+      "args": {
+        "config": { "modelId": "robotaxi-gold-two-seat", "options": { "finish": "gold" } },
+        "quantity": 1,
+        "destinationZone": "zone-metro"
+      }
+    },
+    {
+      "at": 0,
+      "agent": "test-agent",
+      "tool": "place_order",
+      "args": { "quoteId": "$steps[0].quoteId", "leadOption": "standard", "idempotencyKey": "scenario-outage-1" }
+    },
+    { "at": 40, "operator": { "type": "fault", "value": "assembly" } },
+    { "at": 160, "operator": { "type": "repair" } }
+  ],
+  "expect": {
+    "finalStatus": "delivered",
+    "maxSimSeconds": 3600,
+    "statusSubsequence": ["scheduled", "in_production", "shipped", "delivered"],
+    "updateTypes": ["order.at_risk", "estimate.revised", "order.risk_cleared"],
+    "ledgerIntact": true
+  }
+}

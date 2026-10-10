@@ -5,6 +5,7 @@ modules = ["nodejs-22"]
 [env]
 PUBLIC_MODE = "true"
 PORT = "3000"
+ORDER_DESK_ENABLED = "false"
 
 [deployment]
 build = ["sh", "-c", "npm ci && npm run build"]

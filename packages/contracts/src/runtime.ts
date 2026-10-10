@@ -1,5 +1,7 @@
 import { z } from "zod";
 import { LINE_IDS, SCENARIOS, DEFECT_CLASSES, commandSchema } from "./index.ts";
+import { orderDeskViewSchema } from "./orders.ts";
+export { orderDeskViewSchema };
 
 const n = z.number().finite().nonnegative();
 const count = n.int();
@@ -107,7 +109,8 @@ export const productionOrderSchema = z
     priority: count.min(1).max(5),
     status: z.enum(["queued", "in-progress"]),
     createdAt: n,
-    source: z.enum(["showcase", "manual"]),
+    source: z.enum(["showcase", "manual", "agent"]),
+    externalRef: z.string().min(1).max(64).optional(),
   })
   .refine(
     (order) => order.completed < order.quantity,
@@ -382,6 +385,14 @@ export const snapshotMessageSchema = z.object({
   sequence: count,
   sentAt: n.optional(),
   snapshot: snapshotSchema,
+});
+/** DF-ORDER-001: read-only order floor desk frame, sent only to floor viewers. */
+export const ordersMessageSchema = z.object({
+  type: z.literal("orders"),
+  sessionId: z.literal("order-floor"),
+  sequence: count,
+  sentAt: n.optional(),
+  desk: orderDeskViewSchema,
 });
 const finiteMetrics = z.record(z.number().finite());
 export const experimentResultSchema = z.object({

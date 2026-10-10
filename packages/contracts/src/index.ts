@@ -106,7 +106,9 @@ export interface ProductionOrder {
   priority: number;
   status: "queued" | "in-progress";
   createdAt: number;
-  source: "showcase" | "manual";
+  source: "showcase" | "manual" | "agent";
+  /** DF-ORDER-001 order desk id (for example ao-7k2m9q4x1c) when source is "agent". */
+  externalRef?: string;
 }
 export interface Vehicle {
   orderId?: string;
@@ -297,6 +299,8 @@ export const commandSchema = z
       "profile",
       "priority",
       "order-create",
+      "order-agent-create",
+      "order-cancel",
       "order-priority",
       "buffer",
       "config",

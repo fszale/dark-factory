@@ -1,6 +1,6 @@
 # Vehicle Order MCP (the factory as a seller)
 
-Status: **proposed spec**. Not implemented. No order desk, MCP endpoint, or agent key exists in the codebase yet.
+Status: **implemented on branch `feat/df-order-mcp`, off by default (`ORDER_DESK_ENABLED`), not deployed.** Filip gave the go on 2026-10-08. All 20 tasks are done with local evidence, and corrections found during implementation are listed in [Implementation corrections](#implementation-corrections-2026-10-08). No agent key has been issued, nothing is listed in an MCP registry, and Replit publish requires Filip's yes.
 Date: 2026-10-08
 Repo: [fszale/dark-factory](https://github.com/fszale/dark-factory) (Brickworks)
 ID: `DF-ORDER-001`
@@ -315,7 +315,7 @@ A quote forks the floor and runs it forward. Because the simulation is determini
 3. Read `completeBySimTime` (last `vehicle-complete`), `shipBySimTime` (last `vehicle-dispatched`), and add the zone's nominal carrier time for `deliverBySimTime`.
 4. Convert to wall time at floor speed 1. `confidence` is `firm-if-no-new-inputs`, or `at-risk` if any warning is present, or `unknown` on horizon overrun.
 
-One forked run also re-forecasts all active agent orders at once, which the desk uses for `estimate.revised` updates (at most every 30 wall seconds, only after a fault, repair, pause, resume, or new order on the floor).
+One forked run also re-forecasts all active agent orders at once, which the desk uses for `estimate.revised` updates (only after a fault, repair, pause, resume, or new order on the floor; routine triggers at most every 30 wall seconds, while a raised or cleared risk re-forecasts at once, see correction 29).
 
 Carrier delays cannot be forecast at quote time because they are seeded by the order id, which does not exist yet. The quote states the nominal transit and the maximum delay factor (1.6 per leg).
 
@@ -364,7 +364,10 @@ export const agentReference = z
 export const virtualAmount = z
   .object({ amount: z.number().finite().nonnegative(), currency: z.literal("BWC-VIRTUAL") })
   .strict();
-const virtualNotice = { virtual: z.literal(true), disclaimer: z.string() };
+// Safety rule 1: every agent-facing body carries these two fields at the top level (correction 36).
+export const VIRTUAL_DISCLAIMER = "Virtual order in the Brickworks simulation. No payment, no physical vehicle, no shipment.";
+export const virtualNotice = { virtual: z.literal(true), disclaimer: z.literal(VIRTUAL_DISCLAIMER) };
+export const withVirtualNotice = <T extends object>(body: T) => ({ ...body, virtual: true as const, disclaimer: VIRTUAL_DISCLAIMER });
 
 export const feasibilityIssue = z.object({
   code: z.enum([
@@ -543,19 +546,19 @@ export const orderSummary = orderView.pick({
 export const placeOrderInput = z
   .object({ quoteId, leadOption: z.enum(LEAD_OPTIONS), idempotencyKey, agentReference: agentReference.optional() })
   .strict();                                       // no approval token: no money moves (contrast DF-SHOP-001 placeOrderInput)
-export const placeOrderOutput = z.object({ order: orderView, replayed: z.boolean() });
+export const placeOrderOutput = z.object({ order: orderView, replayed: z.boolean(), ...virtualNotice });
 
 // ---------- get_order / list_orders ----------
 export const getOrderInput = z.object({ orderId: agentOrderId }).strict();
-export const getOrderOutput = z.object({ order: orderView });
+export const getOrderOutput = z.object({ order: orderView, ...virtualNotice });
 export const listOrdersInput = z
   .object({ status: z.array(orderStatus).max(13).optional(), cursor: z.string().max(64).optional(), limit: z.number().int().min(1).max(50).default(20) })
   .strict();
-export const listOrdersOutput = z.object({ orders: z.array(orderSummary), nextCursor: z.string().nullable() });
+export const listOrdersOutput = z.object({ orders: z.array(orderSummary), nextCursor: z.string().nullable(), ...virtualNotice });
 
 // ---------- cancel_order ----------
 export const cancelOrderInput = z.object({ orderId: agentOrderId, idempotencyKey }).strict();
-export const cancelOrderOutput = z.object({ order: orderView, cancelled: z.boolean(), replayed: z.boolean() });
+export const cancelOrderOutput = z.object({ order: orderView, cancelled: z.boolean(), replayed: z.boolean(), ...virtualNotice });
 
 // ---------- get_order_updates ----------
 export const ORDER_UPDATE_TYPES = [
@@ -593,9 +596,10 @@ export const getOrderUpdatesOutput = z.object({
   nextCursor: z.string(),
   hasMore: z.boolean(),
   oldestRetainedSeq: z.number().int(),             // a cursor older than this returns CURSOR_EXPIRED
+  ...virtualNotice,
 });
 
-// ---------- errors (MCP isError structuredContent and REST body) ----------
+// ---------- errors (REST body; MCP isError result as JSON text in content[0], correction 37) ----------
 export const orderDeskError = z.object({
   error: z.object({
     code: z.enum([
@@ -608,6 +612,7 @@ export const orderDeskError = z.object({
     retryAfterSeconds: z.number().int().optional(),
     issues: z.array(feasibilityIssue).optional(),
   }),
+  ...virtualNotice,
 });
 ```
 
@@ -665,7 +670,7 @@ For agents without an MCP client. Same `OrderDesk` service, same Zod schemas, sa
 
 HTTP status mapping: `VALIDATION_FAILED` 400, `UNAUTHORIZED` 401, `FORBIDDEN_SCOPE` 403, `ORDER_NOT_FOUND`/`QUOTE_NOT_FOUND` 404, `IDEMPOTENCY_KEY_REUSED`/`CANCEL_NOT_ALLOWED` 409, `QUOTE_EXPIRED`/`CURSOR_EXPIRED` 410, `QUOTE_INFEASIBLE` 422, `RATE_LIMITED` 429 with `Retry-After`, `ORDER_DESK_DISABLED`/`FLOOR_UNAVAILABLE`/`ORDER_DESK_PAUSED` 503.
 
-**Webhooks** (off by default, `ORDER_WEBHOOKS_ENABLED=false`). Outbound calls from the server are an SSRF surface, so the URL is not agent-supplied. Filip sets it per agent key in the key configuration. HTTPS only, resolved address must not be private, loopback, or link-local, body is one `orderUpdate`, header `X-Brickworks-Signature: sha256=<HMAC of body with the agent's webhook secret>`, three retries with backoff (5, 30, 120 seconds), then the update is still available by polling. Delivery is at least once; receivers dedupe by `seq`.
+**Webhooks** (off by default, `ORDER_WEBHOOKS_ENABLED=false`). Outbound calls from the server are an SSRF surface, so the URL is not agent-supplied. Filip sets it per agent key in the key configuration. HTTPS only, resolved address must not be private, loopback, or link-local, body is one `orderUpdate` plus the virtual notice, header `X-Brickworks-Signature: sha256=<HMAC of body with the agent's webhook secret>`, three retries with backoff (5, 30, 120 seconds), then the update is still available by polling. Delivery is at least once; receivers dedupe by `seq`.
 
 ## Auth, rate limits, and caps
 
@@ -681,20 +686,23 @@ Comparison uses SHA-256 plus `timingSafeEqual`, as `secretMatches` already does 
 
 **Rate limits** (in-process sliding windows, same approach as `withinRate`, app.ts:633):
 
-| Bucket | Limit |
-| --- | --- |
-| Any call, per agent | 60 per minute |
-| `quote_vehicle`, per agent | 10 per minute |
-| `place_order`, per agent | 3 per minute, 20 per day |
-| Concurrent long polls or SSE streams, per agent | 2 |
-| Anonymous, per client IP (Fastify `trustProxy` on Replit) | 20 per minute |
-| Forecast worker, global | concurrency 1, queue 5, then `RATE_LIMITED` with `retryAfterSeconds` |
+| Bucket | Limit | Charged |
+| --- | --- | --- |
+| Failed auth or scope check, per client IP | 20 per minute | on each 401 or 403 (bad key, missing key, missing scope) |
+| Any call, per agent | 60 per minute | after auth, before validation (loose flood limit) |
+| Anonymous, per client IP (Fastify `trustProxy` on Replit) | 20 per minute | after auth, before validation (loose flood limit) |
+| `quote_vehicle`, per agent | 10 per minute | after validation and the kill switch |
+| `place_order`, per agent | 3 per minute, 20 per day | only when an order is about to be created (all windows or none) |
+| Concurrent long polls or SSE streams, per agent | 2 | while open |
+| Forecast worker, global | concurrency 1, queue 5, then `RATE_LIMITED` with `retryAfterSeconds` | per forecast |
+
+**Check order** (correction 38): kill switch, then auth and scope, then the loose flood limits, then strict input validation, then the desk checks (quote found and fresh, intake pause, feasibility, caps, idempotency replay), and only then the strict quote or place budget. A rejected request never spends the place budget, and a 429 never hides `VALIDATION_FAILED`, `ORDER_DESK_PAUSED` or `ORDER_DESK_DISABLED`.
 
 **Caps:** quantity 1 to 3 per order; 3 non-terminal orders per agent (overridable per key); 10 non-terminal agent orders on the floor (the engine allows 20; the rest stay for showcase and operator orders); update log retains 5,000 desk-wide and 500 per order; terminal orders kept 7 days, then summarized.
 
 ## Safety rules
 
-1. **Virtual everywhere.** Every response carries `virtual: true` and a disclaimer: "Virtual order in the Brickworks simulation. No payment, no physical vehicle, no shipment." Currency is the literal `BWC-VIRTUAL`.
+1. **Virtual everywhere.** Every response carries `virtual: true` and a disclaimer: "Virtual order in the Brickworks simulation. No payment, no physical vehicle, no shipment." That covers every success body, every error body (auth, validation, 404, 409, 410, 422, 429, 503 off, kill switch and paused), each SSE event, each webhook body, and MCP JSON-RPC envelopes (`result._meta` and `error.data`). Currency is the literal `BWC-VIRTUAL`.
 2. **Strict schemas.** Unknown keys are rejected, so payment, address, or contact fields cannot be smuggled in.
 3. **No PII stored or logged.** Logs contain agent id, order id, update type, and simulation time only.
 4. **Minimal authority.** The desk can issue only `order-agent-create` and `order-cancel`. Agents cannot set priority 1, cannot target stations or modules, and cannot affect other orders. The floor runs in manual mode with no provider calls.
@@ -765,7 +773,7 @@ The repo keeps sessions in memory and writes a private NDJSON archive under `.da
 
 - **In memory:** desk state (quotes, orders with machine snapshots, idempotency index, update log, carrier states, cursor sequence).
 - **On disk:** `ORDER_DATA_DIR` (default `.data/orders`, private, never static) holds `order-floor.json` with `{ formatVersion: 1, writtenAt, desk, floorCheckpoint }`, where `floorCheckpoint` is `exportRun()` of the floor. One file, written atomically (temporary file then rename), so desk and factory can never disagree after a crash. Written on every order state change (debounced 1 second), every 30 simulated seconds, and in the `onClose` hook.
-- **Archive:** the floor is a normal archived session, so `order-agent-create` and `order-cancel` appear in its NDJSON history with simulation times, and replay reproduces them.
+- **Archive:** the floor writes its own NDJSON archive (`ORDER_DATA_DIR/order-floor-archive.ndjson`, see corrections 1, 2 and 15). `order-agent-create` and `order-cancel` appear in it as engine commands with simulation times, next to desk intake and action records, and replay reproduces them.
 - **Boot:** if `order-floor.json` exists and parses, restore the floor with `FactorySimulation.fromExport` (which imports paused), restore the desk, reconcile (every non-terminal desk order must map to a factory order, a live vehicle, or carrier state; anything that cannot is marked `failed` with `floor_state_lost`), then `start`. Otherwise create a fresh floor.
 - **Operator export and import:** `GET /api/order-floor/export` and `POST /api/order-floor/import` (access code required), so the state can be saved before a Replit republish.
 
@@ -988,3 +996,48 @@ For a QA bot. Record each item as `PASS`, `PARTIAL`, `NOT RUN`, or `BLOCKED` wit
 - Durable external storage and multi-instance deployment.
 - Publishing to Replit, issuing agent keys, or listing in any MCP registry without Filip's explicit yes.
 - Publishing a "standard". Like DF-SHOP-001, this is a draft for discussion.
+
+## Implementation corrections (2026-10-08)
+
+Places where this spec was wrong or underspecified, found while implementing on `feat/df-order-mcp`. The code follows the corrected behavior, and the related spec lines above were updated where they would otherwise mislead.
+
+1. **The floor archive is its own NDJSON file, not `ArchiveStore`.** `ArchiveStore` keys archives by session UUID and its cleanup deletes archives of sessions that no longer exist. The pinned `order-floor` id would be pruned or rejected.
+2. **Desk intake and desk-action records are archived beside engine entries.** Engine commands alone cannot rebuild the update log: the agent id, label, quote, lead option and zone live only in the desk.
+3. **The replay digest excludes `at`, `seq` and forecast updates.** Wall times and re-forecast timing depend on worker latency, so only simulated content is compared.
+4. **Queue head is derived from audit events, not snapshot polling.** Polling misses transitions between steps and would not be replayable.
+5. **Forecast exactness needs a fixed 0.125 second real-time quantum** (`FLOOR_STEP_SECONDS`). Variable timer steps change event discretization, so the forked run would drift from the floor.
+6. **(Superseded by correction 37.)** MCP schema failures first surfaced as the SDK's `isError` text, because the SDK validated input before the handler ran. MCP now returns the same `VALIDATION_FAILED` body as REST.
+7. **The delay reason `virtual-operator-hold` was added** so operator carrier holds are labeled honestly.
+8. **The reset event carries the active orders**, so the bridge can fail every affected agent order with `floor_reset`.
+9. **`AGENT_ORDER_CAP` and `FLOOR_FULL` map to HTTP 409**, because they are conflicts with current state rather than invalid input.
+10. **Capabilities carry extra fields** (limits, transports, the clock note) that agents need and the sketch omitted.
+11. **A runtime kill switch route was added**, `POST /api/order-floor/kill-switch`. The env flag alone needs a restart, which is too slow for an emergency stop.
+12. **`order-cancel` is allowed on visitor sessions** for their own queued orders (the "This session" view needs it). `order-agent-create` returns 403 there.
+13. **A station pause increments the epoch** (existing engine behavior), so it also expires outstanding quotes.
+14. **`place_order` checks the intake pause before quote infeasibility.** Otherwise a quote taken while paused, which the error-severity rule makes infeasible, would hide the more useful `ORDER_DESK_PAUSED`.
+15. **The archive checkpoint includes desk state, and the archive rotates at 64 MB** to a single `.prev` file, so disk use is bounded.
+16. **Discovery documents return 503 when the desk is disabled**, so a turned-off server does not advertise a dead endpoint.
+17. **Operator auth** uses the access code when one is configured, and is otherwise allowed only when `PUBLIC_MODE` is not `true`. This is the server's existing rule.
+18. **`TRUST_PROXY`** makes per-IP limits work behind Replit's proxy.
+19. **One forecast queue (concurrency 1, queue 5) serves both quotes and re-forecasts.** Overflow returns `RATE_LIMITED`.
+20. **Anonymous MCP sessions are allowed** when anonymous read is on. They are bound to the owner `anonymous`. Only the two public tools succeed; every other tool returns `UNAUTHORIZED`.
+21. **The test-only carrier action `carrier-lose`** is reachable only when `NODE_ENV=test` or under Vitest.
+22. **Operator floor command allowlist:** `start`, `pause`, `speed`, `fault`, `repair`, `order-create`, `order-priority`, `order-cancel`, and `reset` (refused while agent orders are active). `mode`, `profile`, `priority`, config and `order-agent-create` are refused.
+23. **Webhook secrets live in the key configuration JSON** (`BRICKWORKS_AGENT_KEYS`), which is already a secret, rather than separate env vars.
+24. **The webhook DNS check runs before the fetch, a check-then-use race.** This is a known risk, accepted while webhooks stay behind `ORDER_WEBHOOKS_ENABLED=false`.
+25. **Long polls and SSE share the per-agent budget of 2 concurrent streams.**
+26. **Injection failure is detected from the failed command audit entry**, so live operation and archive rebuild reach the same `injection_rejected` outcome.
+27. **The server card uses the v1 server-card schema URL**, with the tool list under `_meta["io.github.fszale/brickworks"]`, because the draft schema has no tools field.
+28. **The desk's floor port can issue only `order-agent-create` and `order-cancel`.** This is enforced in code, not only by convention.
+29. **A raised or cleared risk re-forecasts immediately.** The 30-second wall-clock throttle started at the re-forecast that follows a new order, so a fault shortly after an order reported its `estimate.revised` up to 30 seconds late, and never on a manual clock. Routine triggers stay throttled. Found by the assembly-outage scenario.
+30. **The floor desk view card carries `modelId`.** The feed line ("1 robotaxi") cannot be written without it.
+31. **`GET /api/order-floor/status` reports `operator`** for the supplied `x-access-code`. The web tab needs it to unlock controls without echoing or guessing the code.
+32. **Scenario file additions:** operator steps (`{ at, operator: { type, value?, station? } }`), `description`, and expectation fields `updateTypes`, `shipMatchesQuote`, `engine.ordersCancelledAtLeast` and `ledgerIntact`. The sketch could not express the outage and cancel expectations otherwise.
+33. **Test placement differs from the task list.** Persistence, restart and corrupt-file tests are in `tests/order-desk-server.test.ts`, because they need the Fastify floor. Desk service tests are in `tests/order-desk.test.ts`. Live floor stream tests are in `tests/order-desk-server.test.ts`, and web frame validation is in `tests/order-web-floor.test.ts`.
+34. **Soak comparison metric.** `tickProcessingMs` in `/api/health` measures visitor session ticks only, while the floor runs on its own timer. The 20 percent `tickProcessingMs` comparison therefore does not capture floor cost. The desk soak records memory, floor conservation, retention bounds and stream health instead.
+35. **The optional 3D order tag and carrier cue (task 17) are not implemented.** They were marked optional. The Orders tab covers the required items.
+36. **The virtual notice is on every agent-facing body, not just catalog, capabilities, quotes and order views** (QA Helper FAIL on PR #1, checklist item 11). The sketch left `virtualNotice` out of `listOrdersOutput`, `getOrderUpdatesOutput` and `orderDeskError`, and the wrapper outputs (`placeOrderOutput`, `getOrderOutput`, `cancelOrderOutput`) carried it only inside `order`. Safety rule 1 says every response. One helper, `withVirtualNotice` in `packages/contracts/src/orders.ts`, now adds `virtual: true` and the disclaimer. It is applied in `OrderDeskService.call` (every tool result for REST and MCP), `OrderDeskError.body()` (every error body), SSE events, webhook bodies and the order-updates resource. Parser, body-size and content-type failures on agent routes go through a route-level error handler, so they also return the notice. JSON-RPC envelopes carry it in `error.data` and `result._meta`, including the MCP transport's own 4xx bodies. The sketch schemas above now include `...virtualNotice`, and the contract rejects an error body without it. `tests/order-virtual-notice.test.ts` walks every REST route, every MCP tool, resources and transport errors, on success and on every error class.
+37. **MCP tool errors carry the `orderDeskError` body as JSON text in `content[0]`, not as `structuredContent`, and the desk validates tool input itself.** SDK clients validate `structuredContent` against the tool's success `outputSchema` even on `isError` results, so an error body in `structuredContent` made any client that had called `tools/list` throw instead of seeing the error. Separately, the SDK's own input validation returned plain text with no error code and no notice (correction 6). The server now replaces the SDK `tools/call` handler with one that calls `OrderDeskService.call` directly, which applies the same strict schemas, so MCP and REST return identical error bodies.
+38. **Rate limits are charged after auth, validation, the kill switch and the intake pause** (QA Helper observation on PR #1). The limiter ran before validation and the pause check, so rejected writes used up the 3 per minute place budget and a 429 could hide `VALIDATION_FAILED` or `ORDER_DESK_PAUSED`. The order is now: kill switch, auth and scope, the loose per-agent (60 per minute) or anonymous per-IP (20 per minute) window, validation, the desk checks, and then the strict budgets. Quotes are charged once the input is valid. Placements are charged through a `beforeCommit` hook that runs only when a new order is about to be created, and never for a replay or a refusal. The minute and day windows are charged all or nothing. Floods stay bounded: failed auth or scope checks (bad key, missing key, missing scope) count against a new per-IP window (`invalidAuthPerMinute`, 20), and valid keys sending invalid input still hit the per-agent window. Tests are in `tests/order-rate-limits.test.ts`.
+39. **The incoming-order toast counts painted foreground time, not wall time from mount** (QA Helper item 34 at `7484161`). "A toast" left the lifecycle open. A 6 second wall-clock timer with an opacity fade-in left the toast invisible for its whole life on a software-GL client running at about 1 FPS. The toast is now opaque from its first frame. Its countdown starts at first paint, credits at most 250 ms per painted frame, pauses while the tab is hidden or the toast is hovered or focused, never ends before 3 painted frames, and is capped at 30 seconds of foreground time. At 60 FPS that is exactly 6 seconds.
+40. **The web client batches live frames per task.** Each frame is still validated, and malformed ones are counted and never applied. Only the newest snapshot and the newest desk in a batch reach React state, so a slow 3D frame no longer leaves a queue of per-frame re-renders behind it. Arrivals are diffed against the last rendered desk, so no new order is missed.

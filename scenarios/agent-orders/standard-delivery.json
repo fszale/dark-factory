@@ -1,0 +1,32 @@
+{
+  "kind": "brickworks-agent-order-scenario",
+  "version": 1,
+  "description": "One gold robotaxi, expedite, zone-local, on seed 42 balanced with no other inputs. Ship time must equal the quoted shipBySimTime.",
+  "floor": { "scenario": "balanced", "seed": 42 },
+  "agents": [{ "id": "test-agent", "label": "Test Agent", "scopes": ["quote", "order:write", "order:read"] }],
+  "steps": [
+    {
+      "at": 0,
+      "agent": "test-agent",
+      "tool": "quote_vehicle",
+      "args": {
+        "config": { "modelId": "robotaxi-gold-two-seat", "options": { "finish": "gold" } },
+        "quantity": 1,
+        "destinationZone": "zone-local"
+      }
+    },
+    {
+      "at": 0,
+      "agent": "test-agent",
+      "tool": "place_order",
+      "args": { "quoteId": "$steps[0].quoteId", "leadOption": "expedite", "idempotencyKey": "scenario-standard-1" }
+    }
+  ],
+  "expect": {
+    "finalStatus": "delivered",
+    "maxSimSeconds": 3600,
+    "statusSubsequence": ["scheduled", "in_production", "quality_check", "shipped", "delivered"],
+    "shipMatchesQuote": true,
+    "ledgerIntact": true
+  }
+}

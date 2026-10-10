@@ -49,6 +49,15 @@ Finite mode starts with one `orderSize` order and supports additional explicit o
 
 Completed orders retire immediately from active memory into `order-completed` events containing the complete order and completion time. `orderedUnits`, `ordersCreated`, and `ordersCompleted` remain cumulative. Full history downloads preserve retired records subject to the documented archive quotas. Older v1 checkpoints without orders migrate remaining demand and unfinished vehicles to an explicit legacy order; historical order records that were never collected are not fabricated. Checkpoint validation rejects duplicate orders, inconsistent remaining demand, overcommitment, and unfinished vehicles without an active order.
 
+## Agent orders and cancellation (DF-ORDER-001)
+
+`ProductionOrder.source` also accepts `agent`, with an optional `externalRef` (the desk's order id, at most 64 characters). Both survive `exportRun` and `fromExport`. Older checkpoints without them still import.
+
+- `order-agent-create` takes `value: "quantity:priority:externalRef"` (1 to 3 units, priority 2 to 5; the desk uses 2 for expedite and 3 for standard). Only the order desk issues it; the generic session route answers 403, and provider decisions are rejected.
+- `order-cancel` takes `value: "order-id"`. It removes a queued order only when no unit is completed or committed to final assembly, otherwise it names the vehicle and refuses. A cancellation emits `order-cancelled` with the order record, increments the cumulative `ordersCancelled` metric, and subtracts the remaining units from `orderedUnits`, so the order ledger checks still balance. In finite mode, already accepted modules wait in buffers for the next order. Visitor sessions may use `order-cancel` on their own orders.
+- `parking-route`, `vehicle-parked`, `dispatch-start` and `vehicle-dispatched` events carry `orderId`, so tracking continues after an order retires at end-of-line.
+- The order floor is an ordinary simulation with id `order-floor`. A station `pause` increments the epoch there as everywhere, which expires outstanding quotes. The floor refuses `reset` while agent orders are active.
+
 ## Station operator pause and resume
 
 `pause` with a `station` target holds only that station. `start` with the same target restores its previous state and the exact remaining operation; neither changes the factory's global running flag. The active module, its progress, quality history, queue, and material ownership are retained. Other lines and previously committed logistics continue; new cart reservations to the held station are suppressed. A paused station accumulates `pausedTime` and the factory's `operatorPausedTime`, separately from fault/maintenance downtime.

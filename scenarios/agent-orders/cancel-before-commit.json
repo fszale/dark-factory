@@ -1,0 +1,39 @@
+{
+  "kind": "brickworks-agent-order-scenario",
+  "version": 1,
+  "description": "Place a standard order, then cancel it while it is still scheduled. The engine counts the cancellation and the order ledger stays intact.",
+  "floor": { "scenario": "balanced", "seed": 42 },
+  "agents": [{ "id": "test-agent", "label": "Test Agent", "scopes": ["quote", "order:write", "order:read"] }],
+  "steps": [
+    {
+      "at": 0,
+      "agent": "test-agent",
+      "tool": "quote_vehicle",
+      "args": {
+        "config": { "modelId": "robotaxi-gold-two-seat", "options": { "finish": "gold" } },
+        "quantity": 2,
+        "destinationZone": "zone-local"
+      }
+    },
+    {
+      "at": 0,
+      "agent": "test-agent",
+      "tool": "place_order",
+      "args": { "quoteId": "$steps[0].quoteId", "leadOption": "standard", "idempotencyKey": "scenario-cancel-1" }
+    },
+    {
+      "at": 5,
+      "agent": "test-agent",
+      "tool": "cancel_order",
+      "args": { "orderId": "$steps[1].order.orderId", "idempotencyKey": "scenario-cancel-1-cancel" }
+    }
+  ],
+  "expect": {
+    "finalStatus": "cancelled",
+    "maxSimSeconds": 60,
+    "statusSubsequence": ["placed", "scheduled", "cancelled"],
+    "updateTypes": ["order.cancelled"],
+    "engine": { "ordersCancelledAtLeast": 1 },
+    "ledgerIntact": true
+  }
+}
