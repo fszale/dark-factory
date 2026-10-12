@@ -50,6 +50,9 @@ Sensors (lidar, depth cameras) sit under all of them.
 | OpenMind | robot OS | open-source hardware-agnostic robot runtime | open source | supports Jetson Thor | watch only |
 | RealSense | sensors | depth cameras, spun out of Intel in 2025 | hardware | Jetson Thor and Isaac Sim collaboration | common depth sensor for cells |
 | Ouster | sensors | digital lidar for industrial automation | hardware | Jetson, Isaac ROS, Isaac Sim | safety and localization sensing |
+| Mujin | fleet ops | Mujin OS coordinates fleets of robots and automation equipment in warehouses and factories ([note](../research/ziegler-weekly-robotics-2026-10-12.md)) | platform | none found | one control layer for mixed equipment; US mid-size availability not verified |
+| Ultra | material handling | dual-arm stationary robots for packing, sorting and kitting at logistics sites ([note](../research/ziegler-weekly-robotics-2026-10-12.md)) | robots as a service | none found | warehouse only; useful as a robots-as-a-service and "body and brains" model with Physical Intelligence |
+| microagi | robot skills, data | Shift captures first-person human task video as training data; Atlas deploys policies on existing robots ([note](../research/ziegler-weekly-robotics-2026-10-12.md)) | platform on existing hardware | NVIDIA compute partnership reported | demonstration data from manual stations; Germany and UK focus |
 | NVIDIA | platform | see [NVIDIA industrial AI stack](nvidia-industrial-ai-stack.md) | | | common simulation and edge layer under most of the above |
 
 **Best first fits for an existing mid-size plant** are the software-on-existing-hardware plays: CAD-trained vision QA (Bucket Robotics class), machine tending skills on existing arms (Trener Robotics or Intrinsic class), and a multi-vendor fleet layer (Formant or InOrbit class) once there is more than one robot vendor. These are examples of categories, not endorsements or engagements.

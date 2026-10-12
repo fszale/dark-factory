@@ -4,7 +4,7 @@ Status: **plan, not implemented**. Nothing in this document is built into the Br
 Date: 2026-10-11
 Repo: [fszale/dark-factory](https://github.com/fszale/dark-factory) (Brickworks)
 ID: `DF-PLANT-001`
-Related: [NVIDIA industrial AI stack notes](nvidia-industrial-ai-stack.md), [physical AI startup landscape](physical-ai-startup-landscape.md), [Joint Design Loop, DF-LOOP-001](spacex-design-loop.md), [architecture](../architecture.md), [simulation behavior](../simulation.md), [station adapter boundary](../station-adapters.md), [release evidence](../release-evidence.md)
+Related: [NVIDIA industrial AI stack notes](nvidia-industrial-ai-stack.md), [physical AI startup landscape](physical-ai-startup-landscape.md), [robotics scan 2026-10-12](../research/ziegler-weekly-robotics-2026-10-12.md), [Joint Design Loop, DF-LOOP-001](spacex-design-loop.md), [architecture](../architecture.md), [simulation behavior](../simulation.md), [station adapter boundary](../station-adapters.md), [release evidence](../release-evidence.md)
 
 This plan describes how the ideas behind Brickworks could be applied to one existing mid-size manufacturing plant in Michigan: start from a measured baseline, add a digital twin and vision quality checks on one line, run a bounded robotics pilot, add an agent operations layer that keeps humans in charge, and only then work toward an unattended cell. It is a public, vendor-neutral outline, not an offer, a commitment or evidence of results.
 
@@ -54,6 +54,16 @@ A small fleet of agents runs the plant's operating rhythm, with named human appr
 **Weekly outcome scoreboard:** OEE, scrap rate, unplanned downtime minutes, quality escapes and on-time delivery. Each agent proposes at most one experiment per week. The plant manager adopts or rejects it based on the measured result.
 
 **Guardrails:** agents never write to PLCs or robot controllers. Any action that touches machines, quality disposition, customers, suppliers or money needs a named human approval. Data that must stay in the plant is served by on-premises models.
+
+## Additions from the 2026-10-12 robotics scan
+
+Source: [research note](../research/ziegler-weekly-robotics-2026-10-12.md). All five are **plan, not implemented**.
+
+1. **Fleet orchestration decision (stages B and C).** Before a second robot vendor arrives, decide between vendor-native controllers and one orchestration layer for arms, AMRs and conveyors (Mujin OS, Formant or InOrbit class), and model that layer in the line twin.
+2. **Robots-as-a-service pilot terms (stage C).** Prefer pilots with an integration fee plus monthly support over a large purchase, with uptime and throughput targets tied to the stage A baseline and a clean exit at the go or no-go.
+3. **Operator demonstration data program (stage A onward).** With worker consent and any labor agreement in place, record manual stations as training data for future robot skills and as examples for vision QA.
+4. **Model portability and data ownership (all stages).** Keep robot hardware and AI model vendors separable, and require that plant sensor, robot and inspection data stay exportable. The agent operations layer reads this data under the same human-approval guardrails.
+5. **Vendor scorecard fields.** Record supply-chain origin for robots and compute, and keep humanoids on a separate watchlist outside committed scope.
 
 ## Roles
 
