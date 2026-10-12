@@ -31,7 +31,8 @@ Full notes, quotes, and counterpoints are in the [people tracker](../people/oshb
 | --- | --- | --- |
 | Instant DFM, quote, and lead time for sheet and tube parts at OSH Cut | **Real, in production** | Web app at oshcut.com. Backed by internal APIs. |
 | OSH Cut internal quote, lead, and DFM APIs | **Real, not public** | Caleb: "The MCP just ties into our existing quote, lead, and DFM APIs." No public docs found on 2026-10-08. |
-| OSH Cut MCP server | **Still not public (2026-10-09)** | Demos continue (Claude + "new MCP"). Caleb says DFM APIs are "releasing them soon." oshcut.com `/mcp` and related paths still 404. |
+| OSH Cut MCP server | **Still not public (2026-10-12)** | Being handed to selected users ("Need to get you on OSH Cut's MCP", [post](https://x.com/OSHBuilt/status/2108698548535767054)). Multi-part Claude + OSH Cut RC plane demo on 2026-10-09 ([post](https://x.com/OSHBuilt/status/2108575419641606636)). oshcut.com `/mcp` and related paths still 404. |
+| SendCutSend static LLM spec files | **Real, public** | [LLM Search Specs](https://sendcutsend.com/llm-search-specs/): ordering guide `.md`, catalog `.json` (178 materials, 151 hardware items, 25 finishes), engineering specs `.json` (tolerances, bend parameters, material properties, joined by SKU), "Updated daily". No live DFM or quote; Caleb's reaction: "Imagine if it could do real DFM and collision checks" ([post](https://x.com/OSHBuilt/status/2108573255380709702)). |
 | A standard shop MCP schema across shops | **Does not exist** | Nobody has published one that we found. The sketch below is our draft, not a standard. |
 | Brickworks as a buyer of shop parts | **Proposed** | This spec. |
 | Brickworks as a shop that exposes its own MCP | **Proposed, virtual only** | Seller-side counterpart spec: [DF-ORDER-001](vehicle-order-mcp.md). Virtual orders against the simulated factory; no payments or shipping. A real-plant seller endpoint stays out of scope until there is a physical plant. |
@@ -189,6 +190,16 @@ No application code in this commit.
 | 4 | Optional: read-only run against a published real shop endpoint, if its terms allow. | Side-by-side table of issue codes; no orders. |
 | 5 | Simulation hook: a receiving scenario that draws lead times from a shop quote file instead of fixed config. | Scenario loads; deterministic replays still match. |
 | 6 | Tabletop purchase. Uses the approval gate already in DF-LOOP-001 phase 6. | Human approves a cart; measured outcomes recorded. |
+
+
+## Notes from 2026-10-12 watch
+
+1. **A static tier comes before a live endpoint.** SendCutSend already publishes agent-readable files: an ordering guide, a SKU catalog, and engineering specs that join to it. That is a zero-infrastructure first step any shop can ship. The shop endpoint should treat it as tier 0 (`get_catalog`, `get_design_rules` served from versioned files), with live `check_dfm` and `quote` as tier 1. Caleb's point stands: static rules let an agent self-check, but only the shop can run "real DFM and collision checks" on the actual geometry.
+2. **Phase 4 does not have to wait for OSH Cut.** SendCutSend's public spec files can feed the reference shop MCP's mock rules today (bend parameters and size limits as rule inputs, labeled `declared`, source and version recorded). Read the files only; no ordering, no scraping of quote flows, and check their terms before reuse.
+3. **Quotes need a confidence tier.** Caleb on hard-to-quote work: "an instant quote that sandbags for proto-level jobs, with a requote process for volume that depends on actual data" ([post](https://x.com/OSHBuilt/status/2108950691888898236)). Add `quoteBasis: "instant_proto" | "requote_on_data"` to the quote shape, and let Brickworks record the requote after the first run as `measured`.
+4. **Assemblies are the next frontier.** The 2026-10-09 RC plane is a full multi-part design made of individually manufacturable parts. Per-part DFM passed; fit, collision and flight were not checked ("No idea if it would really fly"). That is the open slot for an assembly-level check in DF-LOOP-001.
+5. **Process power is the dark factory moat.** Caleb: "There's no reason that "a physical component" is a moat ... Nikita is probably thinking of "process power," but that takes time to create." ([post](https://x.com/OSHBuilt/status/2109644744867688773)). For Brickworks, the compounding asset is the measured record of every DFM reject, requote and delivery, not owning machines.
+6. **Protocol layer interest.** Aaron Slodov (@aphysicist) wants "a new foundational protocol for factories to live on" and called Caleb's thesis "a good start for the layer that lives on top"; Caleb asked to chat ([post](https://x.com/OSHBuilt/status/2108947882086961502)). Worth watching before freezing any schema here.
 
 ## Open questions and counterpoints
 

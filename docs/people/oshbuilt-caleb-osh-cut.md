@@ -27,14 +27,14 @@ Related spec: [DF-SHOP-001, shop-as-MCP sourcing](../plans/shop-mcp-sourcing.md)
 | Lead time | Standard lead time cut from five days to two for simple parts in late 2024; paid rush dropped 75%, revenue growth accelerated 100%, 2025 margin was a record (his numbers). | [Digital-first manufacturing](https://www.thefabricator.com/thefabricator/blog/lasercutting/the-potential-of-digital-first-manufacturing) |
 | Public contact | support@oshcut.com, quote@oshcut.com, 801-850-7584 | [About](https://www.oshcut.com/about-osh-cut), [oshcut.com](https://www.oshcut.com/) |
 
-## API and MCP status (as of 2026-10-09, 10:56 AM ET)
+## API and MCP status (as of 2026-10-12, 11:00 AM ET)
 
 | Item | Status | Evidence |
 | --- | --- | --- |
 | Internal quote, lead time, and DFM APIs | **Real.** They power the oshcut.com web app. Not publicly documented. | "The MCP just ties into our existing quote, lead, and DFM APIs." ([post](https://x.com/OSHBuilt/status/2107243952642691485)). A developer replied "I don't see any way to use this API publically?" ([post](https://x.com/10_X_eng/status/2107244803411071487)) |
-| OSH Cut MCP server | **Still not public.** Caleb now calls it "OSH Cut's new MCP" after more Claude demos, but oshcut.com still has no public endpoint. | "I tested Claude with OSH Cut's new MCP" ([2026-10-08, 3:53 PM ET](https://x.com/OSHBuilt/status/2108284738121465978)); earlier "Sorry, MCP isn't published yet." ([post](https://x.com/OSHBuilt/status/2107246239398101006)) |
-| Publication date | **Still pending.** Promised "within a week" of 2026-10-07; on 2026-10-08 night he said DFM APIs are "releasing them soon." | ([within a week](https://x.com/OSHBuilt/status/2107832476970418580)); ([releasing soon](https://x.com/OSHBuilt/status/2108349510619652220)) |
-| Public docs on oshcut.com | Still none. `/mcp`, `/api`, `/developers`, `/docs`, `/llms.txt`, `/.well-known/mcp.json`, `/mcp.json`, `/agents.json` all 404 on 2026-10-09. | Direct HTTP check from the box |
+| OSH Cut MCP server | **Still not public; early users being invited.** Caleb told @Mammoth "Need to get you on OSH Cut's MCP" on 2026-10-09 and showed a full Claude + OSH Cut RC plane design. oshcut.com still has no public endpoint. | "I tested Claude with OSH Cut's new MCP" ([2026-10-08, 3:53 PM ET](https://x.com/OSHBuilt/status/2108284738121465978)); [Mammoth reply](https://x.com/OSHBuilt/status/2108698548535767054); [RC plane](https://x.com/OSHBuilt/status/2108575419641606636); earlier "Sorry, MCP isn't published yet." ([post](https://x.com/OSHBuilt/status/2107246239398101006)) |
+| Publication date | **Overdue against his own estimate.** Promised "within a week" of 2026-10-07; on 2026-10-08 night he said DFM APIs are "releasing them soon." No release post through 2026-10-12 morning. | ([within a week](https://x.com/OSHBuilt/status/2107832476970418580)); ([releasing soon](https://x.com/OSHBuilt/status/2108349510619652220)) |
+| Public docs on oshcut.com | Still none. `/mcp`, `/api`, `/developers`, `/docs/api`, `/api/docs`, `/llms.txt`, `/.well-known/mcp.json` all 404 on 2026-10-12 (same result on 2026-10-09 plus `/mcp.json`, `/agents.json`). | Direct HTTP check from the box |
 | Scope of DFM | Per-part manufacturability for sheet and tube. Not structural engineering, not assembly. Simple designs "solved"; assemblies are not. | "Simple designs are solved. Assemblies aren't." ([post](https://x.com/OSHBuilt/status/2108284738121465978)); structural limit ([post](https://x.com/OSHBuilt/status/2107662423822094678)) |
 
 ## Key ideas, with exact quotes
@@ -161,6 +161,107 @@ Follow-on reply in the same thread ([post](https://x.com/OSHBuilt/status/2108202
 
 - 2026-10-09 morning RT of @c0nst linking an article titled "Stuck at $3 Million" ([post](https://x.com/OSHBuilt/status/2108566448792859061)): not on manufacturing automation / MCP / dark factories.
 
+### 9. New posts 2026-10-09 late morning through 2026-10-12 morning
+
+Read with the built-in X read tools on 2026-10-12. About 60 posts and replies; most were off topic (see Skipped).
+
+#### Claude + OSH Cut designs a whole RC plane (2026-10-09, 11:08 AM ET)
+
+[x.com/OSHBuilt/status/2108575419641606636](https://x.com/OSHBuilt/status/2108575419641606636). About 7.9K views, 95 likes at capture.
+
+> Here's a design by Claude + OSH Cut working together. It's a radio controlled Edge 540, made from aluminum sheet.
+>
+> All parts manufacturable and orderable at https://t.co/MuSYSGMDPc.
+
+Follow-on ([post](https://x.com/OSHBuilt/status/2108575873914093761)): "No idea if it would really fly. Should we try? :-) This was prompted by one of our software engineers." Asked whether the display was a Claude-generated GUI, he answered "Yep, in a web browser." ([post](https://x.com/OSHBuilt/status/2108595549947715914)). A reply noted "the Claude to OSH Cut handoff usually breaks on kerf. seeing every part flagged manufacturable means the dfm check ran." ([@RibiryS](https://x.com/RibiryS/status/2108610346579583270)).
+
+This is the first multi-part assembly demo; earlier he said "Simple designs are solved. Assemblies aren't."
+
+#### Static LLM spec files vs live DFM (2026-10-09, 11:00 AM ET)
+
+em m0shouris (@emm0sh) posted: "if you're designing sheet metal, give this page to your agent and it will answer questions for you ... you can set it up as a skill as well" ([post](https://x.com/emm0sh/status/2108571528543752601)), linking SendCutSend's [LLM Search Specs](https://sendcutsend.com/llm-search-specs/) page. Caleb replied:
+
+> Imagine if it could do real DFM and collision checks 🤔
+
+([post](https://x.com/OSHBuilt/status/2108573255380709702))
+
+The SendCutSend page (checked 2026-10-12) offers "Three files for AI agents, integrations, and tools", "Updated daily": an ordering guide (`.md`), a catalog (`.json`, "178 materials, 151 hardware items, and 25 finishes") and engineering specs (`.json`, "Tolerances, bend parameters, and material properties for design validation. Joins to the catalog by SKU."). File URLs: [ordering guide](https://cdn.sendcutsend.com/specs/sendcutsend-ordering-guide.md), [catalog v1.2](https://cdn.sendcutsend.com/specs/sendcutsend-catalog-v1.2.json), [specs v1.2](https://cdn.sendcutsend.com/specs/sendcutsend-specs-v1.2.json).
+
+#### "Need to get you on OSH Cut's MCP" (2026-10-09, 7:18 PM ET)
+
+Reply to Eric (@Mammoth, runs @McMasterDaily), whose post read "Claude's really ambitious on press brake capabilities. Time for some DFM rules." ([post](https://x.com/Mammoth/status/2108681555191181427)):
+
+> Need to get you on OSH Cut's MCP
+
+([post](https://x.com/OSHBuilt/status/2108698548535767054)). Suggests the MCP is being handed to selected users before public release. Same evening he cheered an "AI designed this laser cut tube" post from Clay (@SCH_Clay, "Trying to reindustrialize America. Mostly via brackets."): "Let's go! So awesome." ([post](https://x.com/OSHBuilt/status/2108724868246286784)).
+
+#### Instant quoting that sandbags prototypes (2026-10-10, 12:00 PM ET)
+
+Reply to Jason Premo (@JasonPremoMFG), a Swiss lathe shop owner arguing instant AI quoting fails on tiny burr-prone parts ([post](https://x.com/JasonPremoMFG/status/2108942447455641902)):
+
+> Super interesting, actually. I love insight from guys with tons of experience.
+>
+> Maybe the answer is an instant quote that sandbags for proto-level jobs, with a requote process for volume that depends on actual data.
+>
+> eg. "Let's make some and find out."
+
+([post](https://x.com/OSHBuilt/status/2108950691888898236))
+
+#### Open to a factory protocol conversation (2026-10-10, 11:48 AM ET)
+
+Aaron Slodov (@aphysicist; bio: "Building the future of manufacturing: @atomic_inc, @reindsummit, @newindustrials") quoted Caleb's thesis post: "here's a good start for the layer that lives on top of what i described" ([post](https://x.com/aphysicist/status/2108946441276412171)), pointing back to his own call for "a new foundational protocol for factories to live on" ([post](https://x.com/aphysicist/status/2107829801683951776)). Caleb:
+
+> I'd love to chat about what you have in mind. Or read an article about it. :-)
+
+([post](https://x.com/OSHBuilt/status/2108947882086961502))
+
+#### AI drafts, it does not engineer (2026-10-10, 11:54 AM ET)
+
+> Agreed! If you teel AI exactly what you are looking for, it handles it just fine. Up to a limit, which is growing faster than ever.
+>
+> Vague prompts create vague outcomes.
+>
+> That might change, but for now, drafting is the task it's good at, not engineering.
+
+([post](https://x.com/OSHBuilt/status/2108949390258036887); "teel" is his original spelling). On AI checking engineering for liability, he told a story of a stamped beam drawing sized wrong and concluded: "I don't know if I'd in general trust AI, but it can also be hard to trust humans." ([post](https://x.com/OSHBuilt/status/2109020233587737013))
+
+#### Small shops and revenue per employee (2026-10-11, 11:09 AM ET)
+
+Quoting Thaaat Colin's (@ThaaatColin) "This is why we have so many of these small shops. They are the unappreciated backbone of Americas supply chain" chart post ([post](https://x.com/ThaaatColin/status/2109250116007973030)):
+
+> Every shop owner should understand this graph.
+
+([post](https://x.com/OSHBuilt/status/2109300282375188626); about 5K views, 40 bookmarks). A shop owner replied that the in-between headcount "will burn you out" ([post](https://x.com/Manufacture_IT/status/2109621252390318551)); Caleb: "Same. It gets harder, then easier." ([post](https://x.com/OSHBuilt/status/2109642784307294649))
+
+#### A physical component is not a moat (2026-10-12, 9:57 and 10:13 AM ET)
+
+Quoting a viral post (about 1.1M views) that said the only moats left are "Proprietary data", "Network effects" and "A physical component" ([post](https://x.com/i/status/2109497987055640958)):
+
+> There's no reason that "a physical component" is a moat.
+>
+> Helmer's "Seven Powers" is a really great way to look at this. Nikita is probably thinking of "process power," but that takes time to create.
+
+([post](https://x.com/OSHBuilt/status/2109644744867688773)). Then:
+
+> Let's not all get misty-eyed about physical businesses. It's not a "moat" just to do things that AI can't yet touch.
+>
+> The world is crammed with physical businesses. There are still plenty of humans more than willing to compete if your business is good. Arbitrage is real.
+
+([post](https://x.com/OSHBuilt/status/2109648607360282670)). Replying to "Capex is a moat.": "If your business is amazing, your margins are better than average, and your market is significant, capex is not a barrier at all. If your business is average or mediocre or your market is tiny, it doesn't matter if you have a moat." ([post](https://x.com/OSHBuilt/status/2109657748283777046))
+
+#### Bot spam warning (2026-10-09, 1:34 PM ET)
+
+> Started posting about AI and manufacturing, and now my posts are getting spammed by random bots.
+
+([post](https://x.com/OSHBuilt/status/2108611961697243167)). Any reply from Filip must read as clearly human and specific.
+
+#### Skipped
+
+- Software "engineer" title and PE license debate, 2026-10-10 (many replies, e.g. [post](https://x.com/OSHBuilt/status/2108956018600550549)).
+- AI consciousness debate with @robleclerc, 2026-10-10.
+- Collapsing yard culvert, 2026-10-09 ([post](https://x.com/OSHBuilt/status/2108636228849680792)), and small talk replies.
+- Pointing a larger-order customer to support@oshcut.com ("tell them Caleb said to reach out"), 2026-10-11 ([post](https://x.com/OSHBuilt/status/2109321529670701432)): sales routing, not automation.
+
 ## Notable replies and quotes on the thread
 
 | Who | Point | Link |
@@ -187,6 +288,7 @@ Follow-on reply in the same thread ([post](https://x.com/OSHBuilt/status/2108202
 
 - Builder to builder. Filip builds a virtual dark factory in the open and wants to point its design loop at real shop DFM. Ask how Caleb decided what DFM detail to expose to agents, and offer lessons learned.
 - No pitch in first touch. A later, separate conversation could be about the gap Caleb himself named ("help shops plug into this environment"), which overlaps with Filip's FDE team work. Do not lead with it.
+- Caleb complained on 2026-10-09 that AI and manufacturing posts draw bot spam ([post](https://x.com/OSHBuilt/status/2108611961697243167)). A reply must be short, specific and obviously from a person; no link footer in a public reply.
 - Best channel: X DM or a reply on the thread. Email fallback is the public support inbox (support@oshcut.com); no personal address was found and none should be guessed.
 - Drafts live outside the repo (`/workspace/oshcut-outreach-2026-10-08.md` on the agent box). Nothing has been sent, liked, followed, or replied to.
 
@@ -196,6 +298,8 @@ Follow-on reply in the same thread ([post](https://x.com/OSHBuilt/status/2108202
 - Any OSH Cut public API docs or OpenAPI spec.
 - Caleb's next Fabricator column, likely on agentic design.
 - Whether OSH Cut adds outcome history (on-time rate, defect rate) to what the MCP exposes.
+- Whether Caleb and Aaron Slodov (@aphysicist, Atomic / Reindustrialize) publish anything on a factory protocol layer.
+- Whether OSH Cut ships static LLM spec files like SendCutSend's, or a tiered prototype vs volume quote.
 
 ## Log
 
@@ -204,3 +308,5 @@ Append new entries at the bottom. Format: `YYYY-MM-DD (ET): what changed, with l
 - 2026-10-08 (ET): Started tracking after the thesis post ([link](https://x.com/OSHBuilt/status/2107956520172528000)). Read about 70 of Caleb's posts from 2026-10-02 to 2026-10-07 (built-in X read tools), the thread's notable replies and quotes, oshcut.com, and The Fabricator columns. Findings: internal quote, lead, and DFM APIs are real but undocumented publicly; the MCP is a test server with publication promised within a week of 2026-10-07; no public docs on oshcut.com; no evidence of lights-out production. Added [DF-SHOP-001](../plans/shop-mcp-sourcing.md).
 
 - 2026-10-09 (ET): Weekday watch (prior scheduled run on 2026-10-08 failed). New relevant posts since tracker start: productized "lanes" / anti-broker call ([link](https://x.com/OSHBuilt/status/2108201450279154013) + [follow-on](https://x.com/OSHBuilt/status/2108202950611116509)); "new MCP" Claude demo and high-mix unlock ([link](https://x.com/OSHBuilt/status/2108284738121465978)); DFM-as-feedback-loop with "releasing them soon" ([link](https://x.com/OSHBuilt/status/2108349510619652220)). Skipped RT of "Stuck at $3 Million". Re-checked oshcut.com MCP/API paths: still 404. Updated API/MCP status table and DF-SHOP-001 notes on productized lanes.
+
+- 2026-10-12 (ET): Weekday watch covering 2026-10-09 late morning to 2026-10-12 11:00 AM (built-in X read tools; no run on the weekend). Relevant: Claude + OSH Cut RC plane assembly demo ([link](https://x.com/OSHBuilt/status/2108575419641606636)); "Imagine if it could do real DFM and collision checks" on SendCutSend's static LLM spec files ([link](https://x.com/OSHBuilt/status/2108573255380709702)); "Need to get you on OSH Cut's MCP" to @Mammoth ([link](https://x.com/OSHBuilt/status/2108698548535767054)); sandbagged proto quote plus data-driven requote ([link](https://x.com/OSHBuilt/status/2108950691888898236)); open to chat with @aphysicist on a factory protocol layer ([link](https://x.com/OSHBuilt/status/2108947882086961502)); "drafting is the task it's good at, not engineering" ([link](https://x.com/OSHBuilt/status/2108949390258036887)); small-shop graph ([link](https://x.com/OSHBuilt/status/2109300282375188626)); "a physical component" is not a moat, process power is ([link](https://x.com/OSHBuilt/status/2109644744867688773)); bot spam complaint ([link](https://x.com/OSHBuilt/status/2108611961697243167)). MCP still not public; oshcut.com paths still 404. Updated DF-SHOP-001 with a static spec tier, tiered quotes and the process power note.
