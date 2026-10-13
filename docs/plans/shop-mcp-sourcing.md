@@ -201,6 +201,12 @@ No application code in this commit.
 5. **Process power is the dark factory moat.** Caleb: "There's no reason that "a physical component" is a moat ... Nikita is probably thinking of "process power," but that takes time to create." ([post](https://x.com/OSHBuilt/status/2109644744867688773)). For Brickworks, the compounding asset is the measured record of every DFM reject, requote and delivery, not owning machines.
 6. **Protocol layer interest.** Aaron Slodov (@aphysicist) wants "a new foundational protocol for factories to live on" and called Caleb's thesis "a good start for the layer that lives on top"; Caleb asked to chat ([post](https://x.com/OSHBuilt/status/2108947882086961502)). Worth watching before freezing any schema here.
 
+## Notes from 2026-10-13 watch
+
+1. **The moat is reliable high-mix iteration, not machines.** Caleb agreed ("Exactly", [post](https://x.com/OSHBuilt/status/2109742169045237876)) that "Rapid iteration to create complex, high-mix physical things reliably is a moat", while "physical things" alone "almost never" are ([post](https://x.com/OSHBuilt/status/2109741295736623190)). This sharpens note 5 above: the shop endpoint's value is proving reliability over many quick, varied jobs, so delivered-versus-declared history (on-time rate, DFM-pass-to-good-part rate) belongs in the schema, not just capability.
+2. **Lanes get added ahead of demand.** On quick-turn wireforming: "Nobody is asking us for it, but we might add it anyway because people SHOULD be asking for it." ([post](https://x.com/OSHBuilt/status/2109730570880368925)). A tool-and-die shop is building instant-quote stamping and drawing (Obie Industries, per @_baldtires's bio). The `process` field in the capability shape should stay an open list (wireform, stamping, deep draw) rather than an enum of sheet, tube and CNC.
+3. **Keep CAD out of the shop system.** Caleb's "Don't :-)" to Carbon (open-source ERP) rolling browser CAD into its ERP/MES ([post](https://x.com/OSHBuilt/status/2109814630608707676)) matches this spec's split: the design agent owns geometry, the shop endpoint only checks, prices and schedules it. Brickworks should not grow a CAD layer inside its plant model.
+
 ## Open questions and counterpoints
 
 - **Trust.** Declared capability without outcome history "is just a broker listing in a new format" ([post](https://x.com/karanjagtiani04/status/2107972421760540841)). Who holds the history?
