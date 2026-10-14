@@ -27,14 +27,14 @@ Related spec: [DF-SHOP-001, shop-as-MCP sourcing](../plans/shop-mcp-sourcing.md)
 | Lead time | Standard lead time cut from five days to two for simple parts in late 2024; paid rush dropped 75%, revenue growth accelerated 100%, 2025 margin was a record (his numbers). | [Digital-first manufacturing](https://www.thefabricator.com/thefabricator/blog/lasercutting/the-potential-of-digital-first-manufacturing) |
 | Public contact | support@oshcut.com, quote@oshcut.com, 801-850-7584 | [About](https://www.oshcut.com/about-osh-cut), [oshcut.com](https://www.oshcut.com/) |
 
-## API and MCP status (as of 2026-10-13, 10:45 AM ET)
+## API and MCP status (as of 2026-10-14, 10:35 AM ET)
 
 | Item | Status | Evidence |
 | --- | --- | --- |
 | Internal quote, lead time, and DFM APIs | **Real.** They power the oshcut.com web app. Not publicly documented. | "The MCP just ties into our existing quote, lead, and DFM APIs." ([post](https://x.com/OSHBuilt/status/2107243952642691485)). A developer replied "I don't see any way to use this API publically?" ([post](https://x.com/10_X_eng/status/2107244803411071487)) |
 | OSH Cut MCP server | **Still not public; early users being invited.** Caleb told @Mammoth "Need to get you on OSH Cut's MCP" on 2026-10-09 and showed a full Claude + OSH Cut RC plane design. oshcut.com still has no public endpoint. | "I tested Claude with OSH Cut's new MCP" ([2026-10-08, 3:53 PM ET](https://x.com/OSHBuilt/status/2108284738121465978)); [Mammoth reply](https://x.com/OSHBuilt/status/2108698548535767054); [RC plane](https://x.com/OSHBuilt/status/2108575419641606636); earlier "Sorry, MCP isn't published yet." ([post](https://x.com/OSHBuilt/status/2107246239398101006)) |
-| Publication date | **Overdue against his own estimate.** Promised "within a week" of 2026-10-07; on 2026-10-08 night he said DFM APIs are "releasing them soon." No release post through 2026-10-13 10:45 AM ET. | ([within a week](https://x.com/OSHBuilt/status/2107832476970418580)); ([releasing soon](https://x.com/OSHBuilt/status/2108349510619652220)) |
-| Public docs on oshcut.com | Still none. `/mcp`, `/api`, `/developers`, `/docs/api`, `/api/docs`, `/llms.txt`, `/.well-known/mcp.json` all 404 on 2026-10-13 (same result on 2026-10-12, on 2026-10-09 plus `/mcp.json`, `/agents.json`). | Direct HTTP check from the box |
+| Publication date | **Overdue against his own estimate.** Promised "within a week" of 2026-10-07; on 2026-10-08 night he said DFM APIs are "releasing them soon." No release post through 2026-10-14 10:35 AM ET. | ([within a week](https://x.com/OSHBuilt/status/2107832476970418580)); ([releasing soon](https://x.com/OSHBuilt/status/2108349510619652220)) |
+| Public docs on oshcut.com | Still none. `/mcp`, `/api`, `/developers`, `/docs/api`, `/api/docs`, `/llms.txt`, `/.well-known/mcp.json`, `/mcp.json`, `/agents.json` all 404 on 2026-10-14 (same result on 2026-10-13, 2026-10-12 and 2026-10-09). | Direct HTTP check from the box |
 | Scope of DFM | Per-part manufacturability for sheet and tube. Not structural engineering, not assembly. Simple designs "solved"; assemblies are not. | "Simple designs are solved. Assemblies aren't." ([post](https://x.com/OSHBuilt/status/2108284738121465978)); structural limit ([post](https://x.com/OSHBuilt/status/2107662423822094678)) |
 
 ## Key ideas, with exact quotes
@@ -311,6 +311,44 @@ Brad Barbin (@barbinbrad, co-founder of @carbon_ms, "a next-gen, open-source man
 - Garry Tan "maximal agentic loops" profitability post: "Good advice, thank you." ([post](https://x.com/OSHBuilt/status/2109780939140452505)).
 - Video game, RPG, software-developer title, "affine, technically" and "Silver Tsunami" course jokes, and small talk, 2026-10-12 to 2026-10-13.
 
+### 11. New posts 2026-10-13 10:45 AM ET through 2026-10-14 10:35 AM ET
+
+Read with the built-in X read tools on 2026-10-14. 22 posts and replies; mostly off topic (see Skipped). No MCP or API release, and a keyword search of his posts for MCP, API, DFM, agent, quoting and manufacturing in this window returned nothing.
+
+#### Buying friction: "I would still need that form" (2026-10-14, 9:21 AM ET)
+
+Quoting Connor Kapoor (@connorkapoor; bio "Founder @digitalmetalinc, CAD enthusiast, fastest castings in the west!"), who posted "please please please just let me pay you for your goods and services please!" ([post](https://x.com/connorkapoor/status/2110151808924495898)). Caleb:
+
+> "I would still need that form" is the most triggering phrase ever.
+
+([post](https://x.com/OSHBuilt/status/2110360367830618322)). Earlier reply to the same post: "God save us" ([post](https://x.com/OSHBuilt/status/2110170895394456008)). The point for DF-SHOP-001: a quote is only useful to an agent if it can turn into an order without a human-only form in between. The approval gate should be one explicit yes on a cart, not paperwork.
+
+#### End-to-end factory (2026-10-14, 9:45 AM ET)
+
+RobitOverlord (@10_X_eng; "US Army Vet || prev Red Hat / Intel") posted "The factory of the future provides customers with everything they need to make a product - end to end." ([post](https://x.com/10_X_eng/status/2110360647729106979)). Caleb:
+
+> It's an alluring possibility.
+
+([post](https://x.com/OSHBuilt/status/2110366419443654687)). Noncommittal, which fits his earlier view that the future is many productized lanes, not one shop doing everything.
+
+#### Work instructions at scale (2026-10-14, 9:33 AM ET)
+
+Fil Aronshtein (@FilArons, CEO of @DiracInc, "Automating Work Instructions and Process Design") posted "We @DiracInc have passed 2 Million Parts uploaded to BuildOS by our customers." ([post](https://x.com/FilArons/status/2110349301700264233)). Caleb:
+
+> A billion parts is an amazing goal!!
+
+([post](https://x.com/OSHBuilt/status/2110363367567446385)). Dirac is a name to watch for the assembly and work-instruction side of a dark factory, which shop DFM does not cover.
+
+#### Small quantities of wireforms (2026-10-13, 10:21 PM ET)
+
+In the wireforming thread, @Michaelkornuta asked "what do people do for small quantities now? just buy off the shelf?" ([post](https://x.com/Michaelkornuta/status/2110193818779992447)). Caleb: "Clamp it in a machine vice and crank on it until it bends. Probably." ([post](https://x.com/OSHBuilt/status/2110194357655744749)). No sign yet that OSH Cut has started the lane.
+
+#### Skipped
+
+- Yard culvert follow-ups (city meeting, "Definitely going to do the cheapest option and kick the can on the full repair."), 2026-10-13 to 2026-10-14.
+- Smoking post and replies, 2026-10-13.
+- "Sophisticated." lol image (a court exhibit of a hidden recording device), Unity licensing, indie game studios, C Corp vs LLC, and small talk.
+
 ## Notable replies and quotes on the thread
 
 | Who | Point | Link |
@@ -343,13 +381,14 @@ Brad Barbin (@barbinbrad, co-founder of @carbon_ms, "a next-gen, open-source man
 
 ## Watch list
 
-- OSH Cut MCP / DFM API public release (promised "within a week" of 2026-10-07; on 2026-10-08 he said "releasing them soon"). Still 404 on oshcut.com as of 2026-10-09. When it ships, record the endpoint, auth model, tool names, and any terms of use here, then decide whether DF-SHOP-001 phase 4 can run against it read-only.
+- OSH Cut MCP / DFM API public release (promised "within a week" of 2026-10-07; on 2026-10-08 he said "releasing them soon"). Still 404 on oshcut.com as of 2026-10-14. When it ships, record the endpoint, auth model, tool names, and any terms of use here, then decide whether DF-SHOP-001 phase 4 can run against it read-only.
 - Any OSH Cut public API docs or OpenAPI spec.
 - Caleb's next Fabricator column, likely on agentic design.
 - Whether OSH Cut adds outcome history (on-time rate, defect rate) to what the MCP exposes.
 - Whether Caleb and Aaron Slodov (@aphysicist, Atomic / Reindustrialize) publish anything on a factory protocol layer.
 - Whether OSH Cut ships static LLM spec files like SendCutSend's, or a tiered prototype vs volume quote.
 - Whether OSH Cut adds wireforming as a new productized lane, and whether Obie Industries (@_baldtires) ships instant-quote stamping.
+- Dirac (@DiracInc, BuildOS work instructions) and Digital Metal (@connorkapoor, fast castings) as adjacent lanes.
 
 ## Log
 
@@ -362,3 +401,5 @@ Append new entries at the bottom. Format: `YYYY-MM-DD (ET): what changed, with l
 - 2026-10-12 (ET): Weekday watch covering 2026-10-09 late morning to 2026-10-12 11:00 AM (built-in X read tools; no run on the weekend). Relevant: Claude + OSH Cut RC plane assembly demo ([link](https://x.com/OSHBuilt/status/2108575419641606636)); "Imagine if it could do real DFM and collision checks" on SendCutSend's static LLM spec files ([link](https://x.com/OSHBuilt/status/2108573255380709702)); "Need to get you on OSH Cut's MCP" to @Mammoth ([link](https://x.com/OSHBuilt/status/2108698548535767054)); sandbagged proto quote plus data-driven requote ([link](https://x.com/OSHBuilt/status/2108950691888898236)); open to chat with @aphysicist on a factory protocol layer ([link](https://x.com/OSHBuilt/status/2108947882086961502)); "drafting is the task it's good at, not engineering" ([link](https://x.com/OSHBuilt/status/2108949390258036887)); small-shop graph ([link](https://x.com/OSHBuilt/status/2109300282375188626)); "a physical component" is not a moat, process power is ([link](https://x.com/OSHBuilt/status/2109644744867688773)); bot spam complaint ([link](https://x.com/OSHBuilt/status/2108611961697243167)). MCP still not public; oshcut.com paths still 404. Updated DF-SHOP-001 with a static spec tier, tiered quotes and the process power note.
 
 - 2026-10-13 (ET): Weekday watch covering 2026-10-12 11:00 AM to 2026-10-13 10:45 AM (built-in X read tools, 30 posts). Relevant: "physical things" are almost never a moat ([link](https://x.com/OSHBuilt/status/2109741295736623190)) and "Exactly" to reliable high-mix iteration being the real moat ([link](https://x.com/OSHBuilt/status/2109742169045237876)); might add quick-turn wireforming "because people SHOULD be asking for it" ([link](https://x.com/OSHBuilt/status/2109730570880368925)); "Don't" to Carbon rolling CAD into its ERP/MES ([link](https://x.com/OSHBuilt/status/2109814630608707676)); "Should have been fabricated tube" ([link](https://x.com/OSHBuilt/status/2110018405495693551)). New names in threads: Peter Holderith (@_baldtires, tool and die, instant-quote stamping at Obie Industries, NH) and Brad Barbin (@barbinbrad, Carbon open-source ERP). MCP still not public; no MCP/API/DFM posts from @OSHBuilt or @OSHCutInc; oshcut.com paths still 404. Added 2026-10-13 notes to DF-SHOP-001.
+
+- 2026-10-14 (ET): Weekday watch covering 2026-10-13 10:45 AM to 2026-10-14 10:35 AM (built-in X read tools, 22 posts). Relevant but minor: "I would still need that form" is the most triggering phrase ever, on buyer friction ([link](https://x.com/OSHBuilt/status/2110360367830618322)); "It's an alluring possibility." to an end-to-end factory of the future ([link](https://x.com/OSHBuilt/status/2110366419443654687)); "A billion parts is an amazing goal!!" to Dirac passing 2 million parts in BuildOS ([link](https://x.com/OSHBuilt/status/2110363367567446385)); small-quantity wireform reply ([link](https://x.com/OSHBuilt/status/2110194357655744749)). MCP still not public; oshcut.com paths (including `/mcp.json` and `/agents.json`) still 404. Possible DF-SHOP-001 note, not yet applied: keep the quote-to-order path free of human-only forms, so the only human step is the explicit cart approval. No outreach opening today.
