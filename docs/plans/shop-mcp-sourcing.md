@@ -244,6 +244,13 @@ No application code in this commit.
 3. **Near-zero human correction is the benchmark.** "I had it adjust the width of the swing mounting points, but that's all." ([post](https://x.com/OSHBuilt/status/2112637753301340237)). Track human edits per design as a DF-SHOP-001 metric.
 4. **The shop stays a shop.** "I sell sheet metal, not software." ([post](https://x.com/OSHBuilt/status/2112575857533591810)) and the "everything for everyone" post ([post](https://x.com/OSHBuilt/status/2112592278984491169)). The MCP is a sales channel for parts, not a product; the reference spec should keep shop scope narrow and leave design tooling to the buyer agent.
 
+## Notes from 2026-10-22 watch
+
+1. **Expedite is a capacity price, so expose it as one.** "Shipping fast requires excess capacity. Excess capacity cost excess dollars. ergo. charging more for speed is a pure economics problem." ([post](https://x.com/OSHBuilt/status/2113272130846470407)). The `quote` sketch should return lead-time tiers with explicit prices (standard, rush, same-day) so a buyer agent can trade speed for cost instead of asking a human for an expedite.
+2. **Design for assembly, not only per-part DFM.** What the AI produced on the swingset was "cut and bent tube, perfect cope cuts, slots for welds, alignment holes for 1/4-20 bolts, a kit assembly that can be disassembled and transported" ([post](https://x.com/OSHBuilt/status/2113060034859163734)). Weld slots, alignment holes and knock-down kits are assembly features; DF-LOOP-001 checks should cover fit-up and transport, not only cut and bend limits.
+3. **Generate new geometry, do not just pick from a catalog.** Caleb rejects "standardized parts remixed by AI" as the future: "AI is already pretty good at making new shapes in CAD based on user requirements." ([post](https://x.com/OSHBuilt/status/2113269950836269270)). Keep the reference endpoint geometry-in (upload any part, get DFM and price) rather than a parametric catalog only.
+4. **Demand is harness-agnostic.** A Grok Bot user asked for OSH Cut's DFM in his bot ([post](https://x.com/jonwerthen/status/2113023670788509727)) and Caleb answered with the MCP date ([post](https://x.com/OSHBuilt/status/2113059267247046774)). The reference spec should stay plain MCP plus an OpenAPI twin so any agent harness can call it.
+
 ## Open questions and counterpoints
 
 - **Trust.** Declared capability without outcome history "is just a broker listing in a new format" ([post](https://x.com/karanjagtiani04/status/2107972421760540841)). Who holds the history?
