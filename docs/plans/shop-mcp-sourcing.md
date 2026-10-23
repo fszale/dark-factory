@@ -251,6 +251,12 @@ No application code in this commit.
 3. **Generate new geometry, do not just pick from a catalog.** Caleb rejects "standardized parts remixed by AI" as the future: "AI is already pretty good at making new shapes in CAD based on user requirements." ([post](https://x.com/OSHBuilt/status/2113269950836269270)). Keep the reference endpoint geometry-in (upload any part, get DFM and price) rather than a parametric catalog only.
 4. **Demand is harness-agnostic.** A Grok Bot user asked for OSH Cut's DFM in his bot ([post](https://x.com/jonwerthen/status/2113023670788509727)) and Caleb answered with the MCP date ([post](https://x.com/OSHBuilt/status/2113059267247046774)). The reference spec should stay plain MCP plus an OpenAPI twin so any agent harness can call it.
 
+
+## Notes from 2026-10-23 watch
+
+1. **The human channel shipped before the agent channel.** OSH Cut's Metal IQ add-in for Autodesk Fusion puts DFM checks, bend simulation, and buying inside the CAD tool ([Autodesk post](https://x.com/adskFusion/status/2113355301172703647); Caleb: "You can buy from the add-in as well :-)" [post](https://x.com/OSHBuilt/status/2113404527890289124)). The MCP is still unreleased ([GIF reply](https://x.com/OSHBuilt/status/2113400370928169229)). The add-in is evidence that the same quote, DFM, and order APIs can sit behind several front ends; DF-SHOP-001 should treat CAD plugin, web app, and MCP as three clients of one shop service, and record which one a test run used.
+2. **DFM in the design loop, not after it.** The add-in's pitch, "Catch fabrication issues before they hit the shop floor", matches the DF-SHOP-001 loop where the agent checks manufacturability while it designs. Add a metric for DFM issues caught before quote versus after quote.
+3. **High-mix is the shop profile to model.** Caleb: "The solution is high-mix optimized factories" ([post](https://x.com/OSHBuilt/status/2113278703916782058)) and qty 1 "isn't that hard" ([post](https://x.com/OSHBuilt/status/2113280211857092842)). The spec's virtual-seller assumptions should default to qty 1 to low volume, not batch economics.
 ## Open questions and counterpoints
 
 - **Trust.** Declared capability without outcome history "is just a broker listing in a new format" ([post](https://x.com/karanjagtiani04/status/2107972421760540841)). Who holds the history?
