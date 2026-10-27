@@ -263,6 +263,12 @@ No application code in this commit.
 2. **Tube and assembly design tools sit between agent and shop.** OSH Cut is building a tube assembly designer that auto-generates copes and miters for a +/-45 degree bevel tube laser and prices the kit as component parts, with welding and tab-slot not yet included ([post](https://x.com/OSHBuilt/status/2114411525352153132)). The spec should allow assembly-level quotes that list which operations are priced (cut, bend) and which are not (weld, fit-up), so an agent does not mistake a parts price for a finished price.
 3. **Persistence beats skill on constrained design.** "Give it a relatively simple challenge with an impossible constraint, and watch it crank" ([post](https://x.com/OSHBuilt/status/2114022356633145386)). DFM feedback in a loop is what lets that persistence converge; keep DFM responses specific enough (which feature, which rule, suggested fix) for an agent to iterate without a human.
 
+## Notes from 2026-10-27 watch
+
+1. **Record CAD provenance.** Shops are already noticing STEP files whose originating system is "Open CASCADE STEP translator 7.8 1" ([post](https://x.com/KennethCassel/status/2114785811099189577); Caleb: "Probably nothing" [post](https://x.com/OSHBuilt/status/2114786158333002021)). DF-SHOP-001 should log the STEP header's originating system and the agent that produced each part, so shops (and we) can separate agent-designed parts and compare their DFM failure and requote rates against human CAD.
+2. **Uptime belongs in the capability manifest.** Caleb runs "a standing weekly meeting with Trumpf to discuss what's currently broken" ([post](https://x.com/OSHBuilt/status/2114758560303472999)). Machine breakdowns are the real limit on lights-out operation, so a shop endpoint should expose current machine availability or lead-time impact, not only static capability, and the buyer agent should re-check before ordering.
+3. **Order options as parameters.** White-label shipping (custom company name and logo, set in account settings) ([post](https://x.com/OSHBuilt/status/2114746392791126320)) is the kind of order option a buyer agent needs as an explicit field in `order`, so it can drop-ship to an end customer without a human editing settings.
+
 ## Open questions and counterpoints
 
 - **Trust.** Declared capability without outcome history "is just a broker listing in a new format" ([post](https://x.com/karanjagtiani04/status/2107972421760540841)). Who holds the history?
