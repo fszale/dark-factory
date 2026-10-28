@@ -269,6 +269,13 @@ No application code in this commit.
 2. **Uptime belongs in the capability manifest.** Caleb runs "a standing weekly meeting with Trumpf to discuss what's currently broken" ([post](https://x.com/OSHBuilt/status/2114758560303472999)). Machine breakdowns are the real limit on lights-out operation, so a shop endpoint should expose current machine availability or lead-time impact, not only static capability, and the buyer agent should re-check before ordering.
 3. **Order options as parameters.** White-label shipping (custom company name and logo, set in account settings) ([post](https://x.com/OSHBuilt/status/2114746392791126320)) is the kind of order option a buyer agent needs as an explicit field in `order`, so it can drop-ship to an end customer without a human editing settings.
 
+## Notes from 2026-10-28 watch
+
+1. **DFM that repairs, not only rejects.** OSH Cut's coping tool "finds anything that the tube laser can't cut and fixes it" and lets the designer pick a strategy (normalized, tight, groove for welding) and a target angle ([post](https://x.com/OSHBuilt/status/2115216270874275892)). The `dfm` response in DF-SHOP-001 should be able to return a corrected geometry plus the options used (strategy, target angle, what changed), so a buyer agent can accept the fix or re-run with different options instead of redesigning from a text error.
+2. **Assembly context is an input.** Copes depend on the mating tubes, bent tubes, and tabs ([post](https://x.com/OSHBuilt/status/2115257301657632876), [post](https://x.com/OSHBuilt/status/2115258024550072743)). Per-part upload loses that, so the spec should let a buyer agent send the assembly (or the mating surfaces) alongside the part being quoted.
+3. **Payment terms as structured, checked fields.** A silently changed net 30 to net 60 on a PO was one shop owner's top operational risk ([post](https://x.com/c0nst/status/2115195321366327759)), and OSH Cut declines terms beyond net 60 ([post](https://x.com/OSHBuilt/status/2115225504488001904)). `order` should carry terms explicitly, the shop endpoint should accept or reject them up front, and the buyer agent should never edit them after quote. That turns PO entry from a human error point into a validated field.
+4. **"Show me your factory."** Caleb's filter for AI-native manufacturing pitches ([post](https://x.com/OSHBuilt/status/2115236695448932566)) is a reminder that Brickworks should show real parts ordered through an agent, not a software-only factory OS.
+
 ## Open questions and counterpoints
 
 - **Trust.** Declared capability without outcome history "is just a broker listing in a new format" ([post](https://x.com/karanjagtiani04/status/2107972421760540841)). Who holds the history?
