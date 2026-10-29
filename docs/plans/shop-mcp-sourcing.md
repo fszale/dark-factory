@@ -276,6 +276,12 @@ No application code in this commit.
 3. **Payment terms as structured, checked fields.** A silently changed net 30 to net 60 on a PO was one shop owner's top operational risk ([post](https://x.com/c0nst/status/2115195321366327759)), and OSH Cut declines terms beyond net 60 ([post](https://x.com/OSHBuilt/status/2115225504488001904)). `order` should carry terms explicitly, the shop endpoint should accept or reject them up front, and the buyer agent should never edit them after quote. That turns PO entry from a human error point into a validated field.
 4. **"Show me your factory."** Caleb's filter for AI-native manufacturing pitches ([post](https://x.com/OSHBuilt/status/2115236695448932566)) is a reminder that Brickworks should show real parts ordered through an agent, not a software-only factory OS.
 
+## Notes from 2026-10-29 watch
+
+1. **Quotes must be deterministic, from real toolpaths.** Caleb: "don't involve an AI agent in quoting component parts. Quote from first-principle using actual toolpaths on your actual machines." ([post](https://x.com/OSHBuilt/status/2115479925507645805)), replying to a shop that saw AI auto-quotes run 200-500% high. In DF-SHOP-001 the buyer agent calls `quote`, but the shop side must price from its own CAM and machine data, never an LLM estimate. The response should say how the price was derived (toolpath-based, machine, cycle time) so the agent can trust it and compare shops on like terms.
+2. **Watch for the OSH Cut MCP release.** Caleb said the MCP is "going out tomorrow" on 10-28 evening ([post](https://x.com/OSHBuilt/status/2115606789412839717)). When it ships, diff its tools against the DF-SHOP-001 verbs (capability, dfm, quote, order, status) and update this spec to match or explain the gap.
+3. **Multi-site routing.** OSH Cut now runs Utah plus Cincinnati and routes midwest/east volume to Cincinnati ([post](https://x.com/OSHBuilt/status/2115583050000351354)). Capability and lead time should be reported per site, and `order` should let the buyer agent see or pick the producing site, since ship time depends on it.
+
 ## Open questions and counterpoints
 
 - **Trust.** Declared capability without outcome history "is just a broker listing in a new format" ([post](https://x.com/karanjagtiani04/status/2107972421760540841)). Who holds the history?
