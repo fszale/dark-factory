@@ -292,6 +292,7 @@ No application code in this commit.
 - **Assembly.** Per-part DFM is the easy half. Joint count, welding, and fixturing are not covered by any shop endpoint we found. Caleb (2026-10-08): "Simple designs are solved. Assemblies aren't."
 - **Lanes vs brokers.** Caleb argues participation means building a productizable manufacturing service and tying in APIs, not writing another API broker catalog ([post](https://x.com/OSHBuilt/status/2108201450279154013)). Brickworks stays a buyer + virtual seller experiment; it should not become a shop directory.
 
+- **Customer CAD stays the customer's.** (2026-10-30) Buyers are paying shops for CAD archives to train design models ([post](https://x.com/mike_revenue/status/2115578598241579168)); Caleb calls selling customer CAD "Almost 100% unethical" ([post](https://x.com/i/status/2116168116262863117)). A shop endpoint that accepts uploaded geometry for `quote` or `dfm_check` should state retention and no-training terms up front, and Brickworks should record what each shop promises about uploaded files.
 ## Out of scope
 
 - Contacting OSH Cut or any shop from code.
